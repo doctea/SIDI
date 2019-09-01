@@ -73,64 +73,17 @@ unsigned long lastbeat = 0;
 void setup() {
   Serial.begin(38400);
   SID.startClock();
-  
+    
   for( int x=0;x<3;x++ ) {
-    SID.setEnvelope( x, 0, 0, 15, 0 );
+    //SID.setEnvelope( x, 0, 0, 15, 0 );
+    SID.setEnvelope( x, 5, 1, 15, 5 );
     SID.updateEnvelope(x);
     
     SID.setShape( x, SID6581_MASK_SQUARE );
     SID.setPulseWidth( x, 2048 );
   }
-}
 
-/**
- * Sort the notes in the arpeggio structure 
- *
- * @param chan The channel to sort
- */
-void sort_arpeggio(int chan) {
-  int tmp, done = 0,x;
-  
-  while( done != 1 ) {
-    done = 1;
-    for( x=2;x<5;x++ ) {
-      if( arpeg[chan][x] > arpeg[chan][x+1] ) {
-        tmp = arpeg[chan][x+1];
-        arpeg[chan][x+1] = arpeg[chan][x];
-        arpeg[chan][x] = tmp;
-        done = 0;
-      }
-    }
-  }
-}
-
-/**
- * Update the arpeggio's current note for
- * whatever channels it's needed.
- */
-void update_arpeggios() {
-  int chan,note;
-  
-  for( chan = 0; chan < 3; chan++ ) {
-    if( arpeg[chan][0] == 1 && arpeg[chan][1] != -1 ) {
-      while( arpeg[chan][ arpeg[chan][1] ] == -1 && arpeg[chan][1] < 6 ) {
-        arpeg[chan][1]++;
-      }
-      
-      if( arpeg[chan][1] != 6 ) {
-        note = arpeg[chan][arpeg[chan][1]];
-        if( curNote[chan] != note ) {
-          SID.setFrequency( chan, sidinote[note] );
-          SID.updateVoiceFrequency( chan );
-          curNote[chan] = note;
-        }
-      }
-      
-      arpeg[chan][1]++;
-      if( arpeg[chan][1] >= 6 )
-        arpeg[chan][1] = 2;
-    }
-  }
+  test_voice();
 }
 
 /**
@@ -154,6 +107,47 @@ int forceRead() {
  * If it's time to update the notes being played in an
  * arpeggio, do so.
  */
+
+void test_voice() {
+ int evt;
+  while( Serial.available() > 0 ) {
+        evt = forceRead();
+  }
+
+            SID.setVolume(15);
+              SID.setFrequency( 0, sidinote[35] );
+              SID.updateVoiceFrequency( 0 );
+              
+              //if( curNote[chan] == 0 )
+                SID.voiceOn(0);
+                delay(100);
+                SID.voiceOff(0);
+                delay(100);
+
+
+            SID.setVolume(5);
+              SID.setFrequency( 0, sidinote[60] );
+              SID.updateVoiceFrequency( 0 );
+
+              delay(500);
+
+              SID.voiceOff(0);
+
+              delay(500);
+                
+}
+
+#define MIDI_NOTE_OFF 0x80
+#define MIDI_NOTE_ON 0x90
+#define MIDI_AFTERTOUCH 0xA0
+#define MIDI_CC 0xB0
+#define MIDI_PATCH 0xC0 
+#define MIDI_CHANNEL_PRESSURE 0xD0 
+#define MIDI_PITCHBEND 0xE0
+#define MIDI_SYSEX 0xF0 
+#define MIDI_VEND_ARDSID 0x7D
+#define MIDI_SYSEX_END 0xF7 
+
 void loop() {
   int evt, chan, note, vel, foo;
   
@@ -164,51 +158,12 @@ void loop() {
     evt &= 0xf0;
     
     switch( evt & 0xf0 ) {
-      case 0x80:
-      case 0x90:
+      case MIDI_NOTE_OFF: //0x80:
+      case MIDI_NOTE_ON: //0x90:
         note = forceRead();
         vel = forceRead();
-        
-        /*if( arpeg[chan][0] == 1 ) {
-          if( evt == 0x90 && vel != 0 ) {
-            for(vel=6;vel>1;vel--) {
-              if( arpeg[chan][vel] == -1 ) {
-                arpeg[chan][vel] = note;
-                break;
-              }
-            }
-            
-            if( vel != 1 ) {
-              sort_arpeggio(chan);
-              
-              if( vel == 6 ) {
-                arpeg[chan][1] = 2;
-                curNote[chan] = note;
-                SID.setFrequency(chan,sidinote[note]);
-                SID.updateVoiceFrequency(chan);
-                SID.voiceOn(chan);
-              }
-            }
-          } else {
-            for(vel=5;vel>1;vel--) {
-              if( arpeg[chan][vel] == note ) {
-                break;
-              }
-            }
-            
-            if( vel != 1 ) {
-              arpeg[chan][vel] = -1;
-              sort_arpeggio(chan);
-              
-              if( vel == 5 ) {
-                arpeg[chan][1] = -1;
-                curNote[chan] = 0;
-                SID.voiceOff(chan);
-              }
-            }
-          }
-        } else*/ if( chan < 3 && sidinote[note] != 0 ) {
-          if( evt == 0x80 || vel == 0 ) {
+         if( chan < 3 && sidinote[note] != 0 ) {
+          if( evt == MIDI_NOTE_OFF || vel == 0 ) {
             if( curNote[chan] == note ) {
               SID.voiceOff(chan);
               curNote[chan] = 0;
@@ -217,6 +172,7 @@ void loop() {
             if( curNote[chan] != note ) {
               SID.setFrequency( chan, sidinote[note] );
               SID.updateVoiceFrequency( chan );
+              //SID.setVolume(vel>>4);
               
               if( curNote[chan] == 0 )
                 SID.voiceOn(chan);
@@ -227,26 +183,52 @@ void loop() {
         }
         break;
         
-      case 0xA0:
-      case 0xB0:
+      case MIDI_AFTERTOUCH: // 0xA0
+        forceRead();  // key
+        forceRead();  // touch
+      case 0xB0: //MIDI_CC: // 0xB0
+        evt = forceRead();  // controller #
+        vel = forceRead();
+
+        if (chan==0 && evt==1) {  // evt 
+              //vel = forceRead();  // controller value
+
+              SID.setEnvelope( chan, vel, 1, vel, 5 );
+              SID.updateEnvelope(chan);
+              
+              //SID.setFrequency(chan, sidinote[vel]);
+              //SID.updateVoiceFrequency(chan);
+              //delay(2);
+              //test_voice();
+        } else if (chan==1 && evt==1) { //evt==2) {
+              //vel = forceRead();  // controller value
+         
+              SID.setEnvelope( chan, 0, 1, 15, vel );
+              SID.updateEnvelope(chan);
+
+              SID.setPulseWidth(chan, vel<<4);
+               
+              //SID.setFrequency(chan, sidinote[vel]);
+              //SID.updateVoiceFrequency(chan);
+        }
+        //delay(2);
+        
+        break;
+        
+      case MIDI_PATCH: //0xC0:
+        forceRead();
+        break;
+        
+      case MIDI_CHANNEL_PRESSURE: //0xD0:
+        forceRead();
+        break;
+        
+      case MIDI_PITCHBEND: //0xE0:
         forceRead();
         forceRead();
         break;
         
-      case 0xC0:
-        forceRead();
-        break;
-        
-      case 0xD0:
-        forceRead();
-        break;
-        
-      case 0xE0:
-        forceRead();
-        forceRead();
-        break;
-        
-      case 0xF0:
+      case MIDI_SYSEX: //0xF0:
         chan = forceRead();
         
         if( chan == 0x7D ) {
@@ -356,11 +338,11 @@ void loop() {
           }
           do {
             evt = Serial.read();
-          } while( evt != 0xF7 );
+          } while( evt != MIDI_SYSEX_END ); // 0xF7 
         } else {
           do {
             evt = Serial.read();
-          } while( evt != 0xF7 );
+          } while( evt != MIDI_SYSEX_END ); // 0xF7 
         }
         break;
      
@@ -372,12 +354,4 @@ void loop() {
     }
   }
   
-  // ARPEGGIOS
-  /*
-  if( millis() - lastarp > arate ) {
-    update_arpeggios();
-    lastarp = millis();
-  }
-  */
 }
-

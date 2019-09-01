@@ -262,4 +262,3 @@ class SID6581 {
 extern SID6581 SID;
 
 #endif
-
