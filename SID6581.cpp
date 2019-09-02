@@ -257,7 +257,14 @@ void SID6581::setPulseWidth( int voice, uint16_t width ) {
 void SID6581::setEnvelope( int voice, uint8_t atk, uint8_t dec, uint8_t sus, uint8_t rel ) {
   sidchip.voices[voice].ad = 0;
   //release & B00001111) | (sustain << 4
+
+  dec = dec / 8;
+  atk = atk / 8;
+  
   sidchip.voices[voice].ad = (dec & B00001111) | (atk << 4);
+
+  rel = rel / 8;
+  sus = sus / 8;
                              
   sidchip.voices[voice].sr = 0;
   sidchip.voices[voice].sr = (rel & B00001111) | (sus << 4);
@@ -368,5 +375,70 @@ void SID6581::setVolume( uint8_t vol ) {
   writeData();
 }
 
-SID6581 SID = SID6581();
 
+void SID6581::setCutoff( uint8_t vol ) {
+  //sidchip.filter.cutoff &= B11110000;
+  //sidchip.filter. |= (vol & B00001111);
+
+  sidchip.filter.frequency = vol * 16;
+  
+  // Update immediately
+  /*setAddress( SID6581_REG_FCHI );
+  setData( (sidchip.filter.frequency>>8) & B00001111);
+  writeData();*/
+  setAddress( SID6581_REG_FCLO );
+  setData( (sidchip.filter.frequency ) ); // & B00001111);
+  writeData();
+
+  setAddress( SID6581_REG_FCHI );
+  setData( (sidchip.filter.frequency)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
+  writeData();
+}
+
+void SID6581::setFilter (int chan, bool status) {
+  if (status) {
+    sidchip.filter.resfilt |= 1<<chan; //|= (B11110000 | (1<<chan)-1);
+  } else {
+    sidchip.filter.resfilt &= ~(1<<chan); //(B11110000 ^ (1<<chan)-1);
+  }
+
+  setAddress ( SID6581_REG_RFLT );
+  setData(sidchip.filter.resfilt);
+  writeData();
+}
+
+
+void SID6581::setResonance( uint8_t vol ) {
+  //sidchip.filter.resfilt &= B00001111;
+  //sidchip.filter.resfilt |= (vol<<4); // & /*B00001111<<*/4);
+
+  //sidchip.filter.frequency = vol;
+
+  sidchip.filter.resfilt &= B00001111;  // clear high bits
+  //sidchip.filter.resfilt += 1; //&= B00000001;  // set all low bits to enable filter?
+  //sidchip.filter.modevol = B00101111;
+  sidchip.filter.resfilt |= (((vol/8)<<4)&B11110000); // set high bits
+  
+  // Update immediately
+  setAddress( SID6581_REG_RFLT );
+  setData( sidchip.filter.resfilt);
+  writeData();
+}
+
+void SID6581::resetFilter() {
+  sidchip.filter.resfilt = B00000000 | (SID6581_MASK_FLT_V3 | SID6581_MASK_FLT_V2 | SID6581_MASK_FLT_V1 ) ;
+    
+  // Update immediately
+  setAddress( SID6581_REG_RFLT );
+  setData( sidchip.filter.resfilt);
+  writeData();
+
+  sidchip.filter.modevol = (SID6581_MASK_FLT_MODE_BP | B00001111);
+  setAddress( SID6581_REG_MVOL );
+  setData( sidchip.filter.modevol );
+  writeData();
+  
+}
+
+
+SID6581 SID = SID6581();

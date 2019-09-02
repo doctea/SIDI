@@ -99,6 +99,16 @@ void test_voice() {
         evt = forceRead();
   }
 
+
+  SID.resetFilter(); //resetChip();
+  
+  /*sidchip.filter.resfilt = B11111111; // set high bits
+  
+  // Update immediately
+  setAddress( SID6581_REG_RFLT );
+  setData( sidchip.filter.resfilt);
+  writeData();*/
+
             SID.setVolume(15);
               SID.setFrequency( 0, sidinote[35] );
               SID.updateVoiceFrequency( 0 );
@@ -175,28 +185,7 @@ void loop() {
         evt = forceRead();  // controller #
         vel = forceRead();
 
-        if (chan==0 && evt==1) {  // evt 
-              //vel = forceRead();  // controller value
-
-              SID.setEnvelope( chan, vel, 1, vel, 5 );
-              SID.updateEnvelope(chan);
-              
-              //SID.setFrequency(chan, sidinote[vel]);
-              //SID.updateVoiceFrequency(chan);
-              //delay(2);
-              //test_voice();
-        } else if (chan==1 && evt==1) { //evt==2) {
-              //vel = forceRead();  // controller value
-         
-              SID.setEnvelope( chan, 0, 1, 15, vel );
-              SID.updateEnvelope(chan);
-
-              SID.setPulseWidth(chan, vel<<4);
-               
-              //SID.setFrequency(chan, sidinote[vel]);
-              //SID.updateVoiceFrequency(chan);
-        }
-        //delay(2);
+        decodeCC(chan, evt, vel);
         
         break;
         

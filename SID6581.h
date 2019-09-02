@@ -183,6 +183,17 @@
 #define SID6581_MASK_SQUARE 64
 #define SID6581_MASK_NOISE 128
 
+
+#define SID6581_MASK_FLT_V1 1
+#define SID6581_MASK_FLT_V2 2
+#define SID6581_MASK_FLT_V3 4
+#define SID6581_MASK_FLT_EXT 8
+
+#define SID6581_MASK_FLT_MODE_MUTEV3 128
+#define SID6581_MASK_FLT_MODE_HP 64
+#define SID6581_MASK_FLT_MODE_BP 32
+#define SID6581_MASK_FLT_MODE_LP 16
+
 //
 // --------------------------------------------------------------------------
 // SID6581 DATA STRUCTURES
@@ -247,6 +258,11 @@ class SID6581 {
     void setRing(int which, int state);
     
     void setVolume( uint8_t vol );
+    void setCutoff ( uint8_t vol);
+    void setResonance ( uint8_t vol);
+
+    void resetFilter();
+    void setFilter(int chan, bool status);
 
     
     // These are pretty dangerous
