@@ -50,6 +50,9 @@
 /** Current note for all 3 channels */
 unsigned long curNote[3] = { 0, 0, 0 };
 
+int voice_detune[3] = {
+  64, 64 ,64
+};
 
 /**
  * Set up the serial port and start the SID chip's
@@ -120,7 +123,7 @@ void test_voice() {
                 delay(100);
 
 
-            SID.setVolume(5);
+            SID.setVolume(15);
               SID.setFrequency( 0, sidinote[60] );
               SID.updateVoiceFrequency( 0 );
 
@@ -165,7 +168,7 @@ void loop() {
             }
           } else {
             if( curNote[chan] != note ) {
-              SID.setFrequency( chan, sidinote[note] );
+              SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
               SID.updateVoiceFrequency( chan );
               //SID.setVolume(vel>>4);
               

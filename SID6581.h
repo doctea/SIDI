@@ -189,10 +189,10 @@
 #define SID6581_MASK_FLT_V3 4
 #define SID6581_MASK_FLT_EXT 8
 
-#define SID6581_MASK_FLT_MODE_MUTEV3 128
-#define SID6581_MASK_FLT_MODE_HP 64
-#define SID6581_MASK_FLT_MODE_BP 32
-#define SID6581_MASK_FLT_MODE_LP 16
+#define SID6581_MASK_FLT_MUTEV3 128
+#define SID6581_MASK_FLT_HP 64
+#define SID6581_MASK_FLT_BP 32
+#define SID6581_MASK_FLT_LP 16
 
 //
 // --------------------------------------------------------------------------
@@ -263,6 +263,7 @@ class SID6581 {
 
     void resetFilter();
     void setFilter(int chan, bool status);
+    void setFilterMode(int mode);
 
     
     // These are pretty dangerous

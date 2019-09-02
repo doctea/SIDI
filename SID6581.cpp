@@ -153,6 +153,25 @@ void SID6581::resetChip(void) {
   digitalWrite( SID6581_PIN_RESET, HIGH );
 }
 
+
+// doctea to REALLY reset parameters on the ARMSID to something that works
+void SID6581::resetFilter() {
+  sidchip.filter.resfilt = B00000000 | (SID6581_MASK_FLT_V3 | SID6581_MASK_FLT_V2 | SID6581_MASK_FLT_V1 ) ;
+    
+  // Update immediately
+  setAddress( SID6581_REG_RFLT );
+  setData( sidchip.filter.resfilt);
+  writeData();
+
+  sidchip.filter.modevol = (SID6581_MASK_FLT_BP | B00001111);
+  setAddress( SID6581_REG_MVOL );
+  setData( sidchip.filter.modevol );
+  writeData();
+  
+}
+
+
+
 /*********************************************************************
  Set a certain address on our A0 ... A4 pins
  *********************************************************************/
@@ -425,20 +444,18 @@ void SID6581::setResonance( uint8_t vol ) {
   writeData();
 }
 
-void SID6581::resetFilter() {
-  sidchip.filter.resfilt = B00000000 | (SID6581_MASK_FLT_V3 | SID6581_MASK_FLT_V2 | SID6581_MASK_FLT_V1 ) ;
-    
-  // Update immediately
-  setAddress( SID6581_REG_RFLT );
-  setData( sidchip.filter.resfilt);
-  writeData();
 
-  sidchip.filter.modevol = (SID6581_MASK_FLT_MODE_BP | B00001111);
+
+void SID6581::setFilterMode(int mode) {
+  sidchip.filter.modevol &= B00001111;
+  sidchip.filter.modevol |= ((mode));
+
   setAddress( SID6581_REG_MVOL );
   setData( sidchip.filter.modevol );
-  writeData();
-  
+  writeData();  
 }
+
+
 
 
 SID6581 SID = SID6581();

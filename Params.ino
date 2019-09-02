@@ -32,6 +32,7 @@
 
 #define MIDI_CC_CUTOFF    MCB+PPV+1
 #define MIDI_CC_RESONANCE MCB+PPV+2
+#define MIDI_CC_FILTMODE  MCB+PPV+3
 
 #define V_A 0
 #define V_D 1
@@ -51,6 +52,9 @@ int voice_pw_lo[3] = {
   16, 16, 16
 };
 
+/*int voice_detune[3] = {
+  64, 64 ,64
+};*/
 
 
 void decodeCC( int chan, byte controller, byte value ) {
@@ -93,8 +97,10 @@ void decodeCC( int chan, byte controller, byte value ) {
 
       //float range = sidinote[curNote[chan+1]] - sidinote[curNote[chan-1]];
       //float adjust = range/(value-64);
+
+      voice_detune[chan] = value;
     
-      SID.setFrequency(chan, sidinote[curNote[chan]] + value-64); //(int)adjust); //range/((127/64-value)));
+      SID.setFrequency(chan, sidinote[curNote[chan]] + voice_detune[chan]-64); //(int)adjust); //range/((127/64-value)));
       SID.updateVoiceFrequency(chan);
 
       break;
@@ -123,6 +129,18 @@ void decodeCC( int chan, byte controller, byte value ) {
       case MIDI_CC_FILTER:
           SID.setFilter(chan, value==127);
           break;
+
+      case MIDI_CC_FILTMODE:
+        if (value < 32) {
+              SID.setFilterMode (16); //SID6581_MASK_FLT_LP);
+        } else if (value < 64) {
+              SID.setFilterMode (32); //SID6581_MASK_FLT_BP);
+        } else if (value < 96) {
+              SID.setFilterMode (64); //SID6581_MASK_FLT_HP);
+        } else {
+              SID.setFilterMode (128);//SID6581_MASK_FLT_MUTEV3);
+        }
+      break;
 
       break;
   }
