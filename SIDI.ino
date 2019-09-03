@@ -53,6 +53,8 @@ unsigned long curNote[3] = { 0, 0, 0 };
 int voice_detune[3] = {
   64, 64 ,64
 };
+bool poly = false;
+
 
 /**
  * Set up the serial port and start the SID chip's
@@ -160,30 +162,82 @@ void loop() {
       case MIDI_NOTE_ON: //0x90:
         note = forceRead();
         vel = forceRead();
-         if( chan < 3 && sidinote[note] != 0 ) {
-          if( evt == MIDI_NOTE_OFF || vel == 0 ) {
-            if( curNote[chan] == note ) {
-              SID.voiceOff(chan);
-              curNote[chan] = 0;
-            }
-          } else {
-            if( curNote[chan] != note ) {
-              SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
-              SID.updateVoiceFrequency( chan );
-              //SID.setVolume(vel>>4);
-              
-              if( curNote[chan] == 0 )
-                SID.voiceOn(chan);
+        if( chan < 3 && sidinote[note] != 0 ) {
+          if (poly) { 
+            // poly mode - play voices individually by channel
+            // todo - third mode?  re-use notes
+            if( evt == MIDI_NOTE_OFF || vel == 0 ) {
+              if( curNote[chan] == note ) {
+                SID.voiceOff(chan);
+                curNote[chan] = 0;
+              }
+            } else {
+              if( curNote[chan] != note ) {
+                SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
+                SID.updateVoiceFrequency( chan );
+                //SID.setVolume(vel>>4);
                 
-              curNote[chan] = note;
+                if( curNote[chan] == 0 )
+                  SID.voiceOn(chan);
+                  
+                curNote[chan] = note;
+              }
             }
-          }
+          } else {  
+            // mono mode - play all voices simultaneously
+            if( evt == MIDI_NOTE_OFF || vel == 0 ) {  // note off - stop all voices
+              if( curNote[chan] == note ) {
+                SID.voiceOff(0);
+                SID.voiceOff(1);
+                SID.voiceOff(2);
+                curNote[0] = 0;
+                curNote[1] = 0;
+                curNote[2] = 0;
+              }
+            } else {
+              if( curNote[0] != note ) {
+                for (chan = 0 ; chan < 3 ; chan++) {
+                  SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
+                  SID.updateVoiceFrequency( chan );
+                  //SID.setVolume(vel>>4);
+                
+                  if( curNote[chan] == 0 )
+                    SID.voiceOn(chan);
+                  
+                  curNote[chan] = note;
+                }
+              }
+            }
+          } // todo: should we actually have a third mode where we play by channel?!
+
+          /*            if( evt == MIDI_NOTE_OFF || vel == 0 ) {
+              if( curNote[chan] == note ) {
+                SID.voiceOff(chan);
+                curNote[chan] = 0;
+              }
+            } else {
+              if( curNote[chan] != note ) {
+                SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
+                SID.updateVoiceFrequency( chan );
+                //SID.setVolume(vel>>4);
+                
+                if( curNote[chan] == 0 )
+                  SID.voiceOn(chan);
+                  
+                curNote[chan] = note;
+              }
+            }
+          */
+            
         }
+
         break;
         
       case MIDI_AFTERTOUCH: // 0xA0
         forceRead();  // key
         forceRead();  // touch
+        
+        break;
       case 0xB0: //MIDI_CC: // 0xB0
         evt = forceRead();  // controller #
         vel = forceRead();
@@ -204,7 +258,19 @@ void loop() {
         forceRead();
         forceRead();
         break;
+
+      /*case MIDI_SYSEX: //0xF0:
+        chan = forceRead();
         
+        //if( chan == 0x7D ) {
+          //chan = forceRead();
+
+        do {
+          evt = Serial.read();
+        } while( evt != MIDI_SYSEX_END ); // 0xF7 
+
+        break;
+        */
         
       default:
         break;

@@ -28,7 +28,7 @@
 #define MIDI_CC_2_PW_HI MCB+PPV+PPV+4
 #define MIDI_CC_2_PW_LO MCB+PPV+PPV+5*/
 
-#define MIDI_CC_UNISON    MCB+PPV+0 /*+PPV+PPV+0*/
+#define MIDI_CC_POLY    MCB+PPV+0 /*+PPV+PPV+0*/
 
 #define MIDI_CC_CUTOFF    MCB+PPV+1
 #define MIDI_CC_RESONANCE MCB+PPV+2
@@ -107,7 +107,7 @@ void decodeCC( int chan, byte controller, byte value ) {
   
      case MIDI_CC_SHAPE:
       if (value<32) {
-              SID.setShape (chan, SID6581_MASK_SQUARE);
+            SID.setShape (chan, SID6581_MASK_TRIANGLE);
       } else if (value < 64) {
             SID.setShape (chan, SID6581_MASK_SAWTOOTH);
       } else if (value < 96) {
@@ -141,6 +141,14 @@ void decodeCC( int chan, byte controller, byte value ) {
               SID.setFilterMode (128);//SID6581_MASK_FLT_MUTEV3);
         }
       break;
+
+      case MIDI_CC_POLY:
+        poly = value==127;
+        for (chan = 0 ; chan < 3 ; chan++) {
+            SID.voiceOff(chan);
+            curNote[chan] = 0;
+        }
+        break;
 
       break;
   }
