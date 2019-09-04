@@ -258,7 +258,8 @@ void loop() {
         forceRead();
         forceRead();
         break;
-
+        
+        
       /*case MIDI_SYSEX: //0xF0:
         chan = forceRead();
         

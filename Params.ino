@@ -11,7 +11,12 @@
 
 #define MIDI_CC_SHAPE MCB+7
 
+// 24
 #define MIDI_CC_FILTER MCB+8
+
+// 25
+#define MIDI_CC_RING MCB+9
+#define MIDI_CC_SYNC MCB+10
 
 
 /*#define MIDI_CC_1_ATK MCB+PPV+0
@@ -148,6 +153,15 @@ void decodeCC( int chan, byte controller, byte value ) {
             SID.voiceOff(chan);
             curNote[chan] = 0;
         }
+        break;
+
+        
+      case MIDI_CC_RING:
+        SID.setRing(chan,value==127);
+        break;
+        
+      case MIDI_CC_SYNC:
+        SID.setSync(chan,value==127);
         break;
 
       break;
