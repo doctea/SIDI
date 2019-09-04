@@ -7,13 +7,24 @@ Thanks to therealjaypo for his circuit design and code that seems a quicker and 
 
 TODO:
 upload FLStudio dashboard
+
 ensure all features of the SID/ARMSID are exposed
+
 possible to do sample playback..?
+
 external in?
+
 voltage controlled feedback?
+
 add assignable LFOs/envelope (pitch, filter, ..)
 
+mono detune mode
+
+intelligent poly mode
+
 -doctea
+
+
 
 Original text follows.
 
