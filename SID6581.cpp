@@ -334,10 +334,20 @@ void SID6581::voiceOff( int which ) {
 }
   
 void SID6581::setShape( int which, uint8_t shape ) {
-  // Clear other shapes
+  // Clear other shapes in high bits
   sidchip.voices[which].control &= B00001111;
   sidchip.voices[which].control |= shape;
   updateControl(which);
+}
+
+void SID6581::setShape2( int which, byte b, bool state) {
+  if (state && !(b & sidchip.voices[which].control))
+    sidchip.voices[which].control += b;
+  else if (!state && (b & sidchip.voices[which].control))
+    sidchip.voices[which].control -= b;  
+
+  updateControl(which);
+
 }
 
 void SID6581::setSync( int which, int state ) {
@@ -402,9 +412,6 @@ void SID6581::setCutoff( uint8_t vol ) {
   sidchip.filter.frequency = vol * 16;
   
   // Update immediately
-  /*setAddress( SID6581_REG_FCHI );
-  setData( (sidchip.filter.frequency>>8) & B00001111);
-  writeData();*/
   setAddress( SID6581_REG_FCLO );
   setData( (sidchip.filter.frequency ) ); // & B00001111);
   writeData();
@@ -416,9 +423,9 @@ void SID6581::setCutoff( uint8_t vol ) {
 
 void SID6581::setFilter (int chan, bool status) {
   if (status) {
-    sidchip.filter.resfilt |= 1<<chan; //|= (B11110000 | (1<<chan)-1);
+    sidchip.filter.resfilt |= 1<<chan;
   } else {
-    sidchip.filter.resfilt &= ~(1<<chan); //(B11110000 ^ (1<<chan)-1);
+    sidchip.filter.resfilt &= ~(1<<chan);
   }
 
   setAddress ( SID6581_REG_RFLT );
@@ -428,15 +435,8 @@ void SID6581::setFilter (int chan, bool status) {
 
 
 void SID6581::setResonance( uint8_t vol ) {
-  //sidchip.filter.resfilt &= B00001111;
-  //sidchip.filter.resfilt |= (vol<<4); // & /*B00001111<<*/4);
-
-  //sidchip.filter.frequency = vol;
-
   sidchip.filter.resfilt &= B00001111;  // clear high bits
-  //sidchip.filter.resfilt += 1; //&= B00000001;  // set all low bits to enable filter?
-  //sidchip.filter.modevol = B00101111;
-  sidchip.filter.resfilt |= (((vol/8)<<4)&B11110000); // set high bits
+  sidchip.filter.resfilt |= ((vol/8)<<4) & B11110000; // set high bits
   
   // Update immediately
   setAddress( SID6581_REG_RFLT );
@@ -448,7 +448,7 @@ void SID6581::setResonance( uint8_t vol ) {
 
 void SID6581::setFilterMode(int mode) {
   sidchip.filter.modevol &= B00001111;
-  sidchip.filter.modevol |= ((mode));
+  sidchip.filter.modevol |= mode;
 
   setAddress( SID6581_REG_MVOL );
   setData( sidchip.filter.modevol );

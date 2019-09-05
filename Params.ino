@@ -1,5 +1,5 @@
 #define MCB 16
-#define PPV 12 // params per voice
+#define PPV 20 // params per voice
 
 #define MIDI_CC_ATK MCB+0
 #define MIDI_CC_DEC MCB+1
@@ -11,12 +11,16 @@
 
 #define MIDI_CC_SHAPE MCB+7
 
-// 24
 #define MIDI_CC_FILTER MCB+8
 
-// 25
 #define MIDI_CC_RING MCB+9
 #define MIDI_CC_SYNC MCB+10
+
+#define MIDI_CC_TRI MCB+11
+#define MIDI_CC_SAW MCB+12
+#define MIDI_CC_PUL MCB+13
+#define MIDI_CC_NOI MCB+14
+
 
 
 /*#define MIDI_CC_1_ATK MCB+PPV+0
@@ -121,6 +125,23 @@ void decodeCC( int chan, byte controller, byte value ) {
             SID.setShape (chan, SID6581_MASK_NOISE);
       }
       break;
+
+      case MIDI_CC_TRI:
+      case MIDI_CC_SAW:
+      case MIDI_CC_PUL:
+      case MIDI_CC_NOI:
+        int b;
+        if (controller==MIDI_CC_TRI) {
+          b = SID6581_MASK_TRIANGLE;
+        } else if (controller==MIDI_CC_SAW) {
+          b = SID6581_MASK_SAWTOOTH;
+        } else if (controller==MIDI_CC_PUL) {
+          b = SID6581_MASK_SQUARE;
+        } else {
+          b = SID6581_MASK_NOISE;
+        }
+        SID.setShape2 (chan, b, value==127);
+        break;
 
       case MIDI_CC_CUTOFF:
           SID.setCutoff(value);

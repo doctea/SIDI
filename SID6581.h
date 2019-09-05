@@ -250,6 +250,8 @@ class SID6581 {
     void setEnvelope( int voice, uint8_t atk, uint8_t sus, uint8_t dec, uint8_t rel );
     void updateEnvelope( int which );
     void setShape( int which, uint8_t shape );
+    void setShape2( int which, uint8_t cc_shape, bool state);
+
     void updateControl( int which );
     void voiceOn( int which );
     void voiceOff( int which );
