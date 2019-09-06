@@ -421,7 +421,7 @@ void SID6581::setCutoff( uint8_t vol ) {
   writeData();
 }
 
-void SID6581::setFilter (int chan, bool status) {
+void SID6581::setFilterOn (int chan, bool status) {
   if (status) {
     sidchip.filter.resfilt |= 1<<chan;
   } else {
@@ -446,6 +446,19 @@ void SID6581::setResonance( uint8_t vol ) {
 
 
 
+void SID6581::setFilter( byte b, bool state) {
+  if (state && !(b & sidchip.filter.modevol))
+    sidchip.filter.modevol += b;
+  else if (!state && (b & sidchip.filter.modevol))
+    sidchip.filter.modevol -= b;  
+
+  setAddress( SID6581_REG_MVOL );
+  setData( sidchip.filter.modevol );
+  writeData();  
+}
+
+
+// only sets one filter mode at a time, deprecated
 void SID6581::setFilterMode(int mode) {
   sidchip.filter.modevol &= B00001111;
   sidchip.filter.modevol |= mode;

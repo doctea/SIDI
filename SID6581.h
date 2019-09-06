@@ -264,7 +264,8 @@ class SID6581 {
     void setResonance ( uint8_t vol);
 
     void resetFilter();
-    void setFilter(int chan, bool status);
+    void setFilter(byte b, bool status);
+    void setFilterOn(int chan, bool status);
     void setFilterMode(int mode);
 
     

@@ -37,11 +37,17 @@
 #define MIDI_CC_2_PW_HI MCB+PPV+PPV+4
 #define MIDI_CC_2_PW_LO MCB+PPV+PPV+5*/
 
+//36
 #define MIDI_CC_POLY    MCB+PPV+0 /*+PPV+PPV+0*/
 
 #define MIDI_CC_CUTOFF    MCB+PPV+1
 #define MIDI_CC_RESONANCE MCB+PPV+2
-#define MIDI_CC_FILTMODE  MCB+PPV+3
+// legacy
+#define MIDI_CC_FILTMODE  MCB+PPV+3 
+#define MIDI_CC_FILTMODE_LP MCB+PPV+4
+#define MIDI_CC_FILTMODE_BP MCB+PPV+5
+#define MIDI_CC_FILTMODE_HP MCB+PPV+6
+#define MIDI_CC_FILTMODE_MUTEV3 MCB+PPV+7
 
 #define V_A 0
 #define V_D 1
@@ -127,21 +133,30 @@ void decodeCC( int chan, byte controller, byte value ) {
       break;
 
       case MIDI_CC_TRI:
+        SID.setShape2 (chan, SID6581_MASK_TRIANGLE, value==127);
+      break;
       case MIDI_CC_SAW:
+        SID.setShape2 (chan, SID6581_MASK_SAWTOOTH, value==127);
+      break;
       case MIDI_CC_PUL:
+        SID.setShape2 (chan, SID6581_MASK_SQUARE, value==127);
+      break;
       case MIDI_CC_NOI:
-        int b;
-        if (controller==MIDI_CC_TRI) {
-          b = SID6581_MASK_TRIANGLE;
-        } else if (controller==MIDI_CC_SAW) {
-          b = SID6581_MASK_SAWTOOTH;
-        } else if (controller==MIDI_CC_PUL) {
-          b = SID6581_MASK_SQUARE;
-        } else {
-          b = SID6581_MASK_NOISE;
-        }
-        SID.setShape2 (chan, b, value==127);
-        break;
+        SID.setShape2 (chan, SID6581_MASK_NOISE, value==127);
+      break;
+
+      case MIDI_CC_FILTMODE_LP:
+        SID.setFilter(SID6581_MASK_FLT_LP, value==127);
+      break;
+      case MIDI_CC_FILTMODE_BP:
+        SID.setFilter(SID6581_MASK_FLT_BP, value==127);
+      break;
+      case MIDI_CC_FILTMODE_HP:
+        SID.setFilter(SID6581_MASK_FLT_HP, value==127);
+      break;
+      case MIDI_CC_FILTMODE_MUTEV3:
+        SID.setFilter(SID6581_MASK_FLT_MUTEV3, value==127);
+      break;
 
       case MIDI_CC_CUTOFF:
           SID.setCutoff(value);
@@ -152,10 +167,12 @@ void decodeCC( int chan, byte controller, byte value ) {
           SID.setResonance(value);
           break;
 
+      // route channel thru filter on/off
       case MIDI_CC_FILTER:
-          SID.setFilter(chan, value==127);
+          SID.setFilterOn(chan, value==127);
           break;
 
+      // deprecated, only sets one filter mode at a time
       case MIDI_CC_FILTMODE:
         if (value < 32) {
               SID.setFilterMode (16); //SID6581_MASK_FLT_LP);
@@ -175,7 +192,6 @@ void decodeCC( int chan, byte controller, byte value ) {
             curNote[chan] = 0;
         }
         break;
-
         
       case MIDI_CC_RING:
         SID.setRing(chan,value==127);
