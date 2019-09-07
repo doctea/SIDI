@@ -20,22 +20,7 @@
 #define MIDI_CC_SAW MCB+12
 #define MIDI_CC_PUL MCB+13
 #define MIDI_CC_NOI MCB+14
-
-
-
-/*#define MIDI_CC_1_ATK MCB+PPV+0
-#define MIDI_CC_1_DEC MCB+PPV+1
-#define MIDI_CC_1_SUS MCB+PPV+2
-#define MIDI_CC_1_REL MCB+PPV+3
-#define MIDI_CC_1_PW_HI MCB+PPV+4
-#define MIDI_CC_1_PW_LO MCB+PPV+5
-
-#define MIDI_CC_2_ATK MCB+PPV+PPV+0
-#define MIDI_CC_2_DEC MCB+PPV+PPV+1
-#define MIDI_CC_2_SUS MCB+PPV+PPV+2
-#define MIDI_CC_2_REL MCB+PPV+PPV+3
-#define MIDI_CC_2_PW_HI MCB+PPV+PPV+4
-#define MIDI_CC_2_PW_LO MCB+PPV+PPV+5*/
+// todo: add one here for the test bit too?
 
 //36
 #define MIDI_CC_POLY    MCB+PPV+0 /*+PPV+PPV+0*/
@@ -43,11 +28,13 @@
 #define MIDI_CC_CUTOFF    MCB+PPV+1
 #define MIDI_CC_RESONANCE MCB+PPV+2
 // legacy
-#define MIDI_CC_FILTMODE  MCB+PPV+3 
+#define MIDI_CC_FILTMODE MCB+PPV+3 
 #define MIDI_CC_FILTMODE_LP MCB+PPV+4
 #define MIDI_CC_FILTMODE_BP MCB+PPV+5
 #define MIDI_CC_FILTMODE_HP MCB+PPV+6
 #define MIDI_CC_FILTMODE_MUTEV3 MCB+PPV+7
+
+#define MIDI_CC_EMU MCB+PPV+8
 
 #define V_A 0
 #define V_D 1
@@ -191,6 +178,7 @@ void decodeCC( int chan, byte controller, byte value ) {
             SID.voiceOff(chan);
             curNote[chan] = 0;
         }
+        
         break;
         
       case MIDI_CC_RING:
@@ -199,6 +187,10 @@ void decodeCC( int chan, byte controller, byte value ) {
         
       case MIDI_CC_SYNC:
         SID.setSync(chan,value==127);
+        break;
+
+      case MIDI_CC_EMU:
+        SID.setEmulation(value==127);
         break;
 
       break;

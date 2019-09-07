@@ -165,7 +165,6 @@ void loop() {
         if( chan < 3 && sidinote[note] != 0 ) {
           if (poly) { 
             // poly mode - play voices individually by channel
-            // todo - third mode?  re-use notes
             if( evt == MIDI_NOTE_OFF || vel == 0 ) {
               if( curNote[chan] == note ) {
                 SID.voiceOff(chan);
@@ -173,7 +172,7 @@ void loop() {
               }
             } else {
               if( curNote[chan] != note ) {
-                SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
+                SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
                 SID.updateVoiceFrequency( chan );
                 //SID.setVolume(vel>>4);
                 
@@ -197,7 +196,7 @@ void loop() {
             } else {
               if( curNote[0] != note ) {
                 for (chan = 0 ; chan < 3 ; chan++) {
-                  SID.setFrequency( chan, sidinote[note] + voice_detune[chan]-64);
+                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
                   SID.updateVoiceFrequency( chan );
                   //SID.setVolume(vel>>4);
                 
@@ -208,7 +207,7 @@ void loop() {
                 }
               }
             }
-          } // todo: should we actually have a third mode where we play by channel?!
+          } // todo: third mode where we re-use notes intelligently
 
           /*            if( evt == MIDI_NOTE_OFF || vel == 0 ) {
               if( curNote[chan] == note ) {
@@ -234,6 +233,7 @@ void loop() {
         break;
         
       case MIDI_AFTERTOUCH: // 0xA0
+        //todo: make assignable?  effect filter etc
         forceRead();  // key
         forceRead();  // touch
         
@@ -255,6 +255,7 @@ void loop() {
         break;
         
       case MIDI_PITCHBEND: //0xE0:
+        //todo: wobble global pitch
         forceRead();
         forceRead();
         break;
