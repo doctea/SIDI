@@ -151,7 +151,7 @@ void loop() {
   int evt, chan, note, vel, foo;
 
   //void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom);
-  LFOupdate(false, 0/*LFOmodeSelect*/, 10000.0f); // LFOdepth);
+  LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
   
   while( Serial.available() > 0 ) {
     evt = forceRead();

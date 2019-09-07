@@ -422,10 +422,11 @@ void SID6581::setCutoff( uint8_t vol ) {
 }
 
 void SID6581::modulateCutoff( float mod ) {
-  //mod = mod; //mod >> 4;
+  //mod = 1;
+  mod = mod; //mod >> 4;
   // Update immediately
   setAddress( SID6581_REG_FCLO );
-  setData( (sidchip.filter.frequency * mod ) ); // & B00001111);
+  setData( (int)(sidchip.filter.frequency * mod ) ); // & B00001111);
   writeData();
 
   setAddress( SID6581_REG_FCHI );

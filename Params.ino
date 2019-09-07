@@ -153,7 +153,7 @@ void decodeCC( int chan, byte controller, byte value ) {
 
       case MIDI_CC_CUTOFF:
           SID.setCutoff(value);
-
+          LFOupdate(false, 0, value);
       break;
       
       case MIDI_CC_RESONANCE:
