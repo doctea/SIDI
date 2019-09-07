@@ -125,6 +125,21 @@ void SID6581::writeData(void) {
   digitalWrite( SID6581_PIN_SEL, HIGH );
 }
 
+void SID6581::readData(void) {
+  waitCycle();
+
+  digitalWrite( SID6581_PIN_RW, HIGH);
+    // Select chip
+  digitalWrite( SID6581_PIN_SEL, HIGH);
+
+  // Wait for a high to come and go
+  waitCycle();
+
+  // Deselect chip
+  digitalWrite( SID6581_PIN_SEL, HIGH );
+  
+}
+
 /*********************************************************************
  Reset the SID6581 chip
  *********************************************************************/
@@ -153,6 +168,32 @@ void SID6581::resetChip(void) {
   digitalWrite( SID6581_PIN_RESET, HIGH );
 }
 
+
+void SID6581::setEmulation(bool six581) {
+  setAddress (ARMSID_REG_EMU);
+  if (six581) {
+    setData('6');
+  } else{
+    setData('8');
+  }
+  writeData();
+
+  setAddress(ARMSID_REG_30);
+  setData('e');
+  writeData();
+  //SIDaddr[30]='e';
+  delay(150);
+
+  setAddress(29);
+  setData(0);
+  writeData();
+  setAddress(29);
+  setData(0);
+  writeData();
+  setAddress(29);
+  setData(0);
+  writeData();
+}
 
 // doctea to REALLY reset parameters on the ARMSID to something that works
 void SID6581::resetFilter() {
@@ -196,7 +237,18 @@ void SID6581::setData( uint16_t what ) {
   digitalWrite( SID6581_PIN_D5, CHECK_BIT(what,32)?HIGH:LOW );
   digitalWrite( SID6581_PIN_D6, CHECK_BIT(what,64)?HIGH:LOW );
   digitalWrite( SID6581_PIN_D7, CHECK_BIT(what,128)?HIGH:LOW );
- 
+}
+byte SID6581::getData( ) {
+  byte what = 0 ;
+  what |= digitalRead( SID6581_PIN_D0 );//, CHECK_BIT(what,1)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D1)<<1;//, CHECK_BIT(what,2)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D2)<<2;// , CHECK_BIT(what,4)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D3)<<3; //, CHECK_BIT(what,8)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D4)<<4; //, CHECK_BIT(what,16)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D5)<<5; //, CHECK_BIT(what,32)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D6)<<6; //, CHECK_BIT(what,64)?HIGH:LOW );
+  what |= digitalRead( SID6581_PIN_D7)<<7; //, CHECK_BIT(what,128)?HIGH:LOW );
+  return what;
 }
  
 void SID6581::setFrequency( int voice, uint16_t frequency ) {

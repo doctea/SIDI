@@ -170,6 +170,34 @@
 #define SID6581_REG_OSC3 27
 #define SID6581_REG_ENV3 28
 
+
+// ARMSID extended registers
+#define ARMSID_REG_EMU 31
+#define ARMSID_REG_30 30 
+/*if ((a>='6')&&(a<='8')) {
+          6 = 6581
+          7 = 'auto'
+          8 = 8580
+      SIDaddr[31]=a;*/
+
+    /*cprintf("mos 6581 filter strength");
+    cprintf("follin galway  average  strong exterme");
+
+    cprintf("mos 6581 lowest filter frequency");
+    gotoxy(vyber_left[1]+1,vyber_top[1]+3);
+    cprintf(" 150             215              310");
+
+    gotoxy(vyber_left[2]+4,vyber_top[2]+1);
+    cprintf("mos 8580 filter central frequency");
+    gotoxy(vyber_left[2]+1,vyber_top[2]+3);
+    cprintf(" 12000           6000            3000");
+
+    gotoxy(vyber_left[3]+4,vyber_top[3]+1);
+    cprintf("mos 8580 lowest filter frequency");
+    cprintf(" 30              100              330");*/
+    
+
+
 // --------------------------------------------------------------------------
 // SID6581 VOICE CONTROL REGISTER BITMASK
 // --------------------------------------------------------------------------
@@ -242,6 +270,7 @@ class SID6581 {
     void startClock(void);
     void waitCycle(void);
     void writeData(void);
+    void readData(void);
     void resetChip(void);
     
     // Voice manipulation
@@ -268,10 +297,13 @@ class SID6581 {
     void setFilterOn(int chan, bool status);
     void setFilterMode(int mode);
 
+    void SID6581::setEmulation(bool six581);
+
     
     // These are pretty dangerous
     void setAddress( uint16_t what );
     void setData( uint16_t what );
+    byte getData ();
 };
 
 //
