@@ -55,7 +55,6 @@ int voice_detune[3] = {
 };
 bool poly = false;
 
-
 /**
  * Set up the serial port and start the SID chip's
  * clock running. This will also reset the chip.
@@ -162,27 +161,59 @@ void loop() {
       case MIDI_NOTE_ON: //0x90:
         note = forceRead();
         vel = forceRead();
-        if( chan < 3 && sidinote[note] != 0 ) {
+        if( /*chan < 3 &&*/ sidinote[note] != 0 ) {
           if (poly) { 
-            // poly mode - play voices individually by channel
-            if( evt == MIDI_NOTE_OFF || vel == 0 ) {
-              if( curNote[chan] == note ) {
-                SID.voiceOff(chan);
-                curNote[chan] = 0;
-              }
-            } else {
-              if( curNote[chan] != note ) {
-                SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
-                SID.updateVoiceFrequency( chan );
-                //SID.setVolume(vel>>4);
-                
-                if( curNote[chan] == 0 )
-                  SID.voiceOn(chan);
+            if (chan==0) { 
+              // new roundrobin polyopt mode 
+              static int instance;
+              // ignore channel
+              if( evt == MIDI_NOTE_OFF || vel == 0 ) {
+                // turn off the channel thats playing this note
+                for (int i = 0 ; i < 3 ; i++) {
+                  if( curNote[i] == note ) {
+                    SID.voiceOff(i);
+                    curNote[i] = 0;
+                    instance--;
+                    break;
+                  }
+                }
+              } else {
+                if( curNote[chan] != note ) { // not already playing note 
+                  chan = instance%3;
+                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
+                  SID.updateVoiceFrequency( chan );
+                  //SID.setVolume(vel>>4);
                   
-                curNote[chan] = note;
+                  //if( curNote[chan] == 0 )
+                    SID.voiceOn(chan);
+                    
+                  curNote[chan] = note;
+                  instance++;
+                }
+              }              
+            } else {
+              chan %= 3;
+              // poly mode - play voices individually by channel
+              if( evt == MIDI_NOTE_OFF || vel == 0 ) {
+                if( curNote[chan] == note ) {
+                  SID.voiceOff(chan);
+                  curNote[chan] = 0;
+                }
+              } else {
+                if( curNote[chan] != note ) {
+                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
+                  SID.updateVoiceFrequency( chan );
+                  //SID.setVolume(vel>>4);
+                  
+                  if( curNote[chan] == 0 )
+                    SID.voiceOn(chan);
+                    
+                  curNote[chan] = note;
+                }
               }
             }
           } else {  
+            chan %= 3;
             // mono mode - play all voices simultaneously
             if( evt == MIDI_NOTE_OFF || vel == 0 ) {  // note off - stop all voices
               if( curNote[chan] == note ) {

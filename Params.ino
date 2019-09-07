@@ -189,8 +189,15 @@ void decodeCC( int chan, byte controller, byte value ) {
         SID.setSync(chan,value==127);
         break;
 
-      case MIDI_CC_EMU:
+      /*case MIDI_CC_EMU:
         SID.setEmulation(value==127);
+        break;*/
+
+      case 123: // midi stop all notes
+        for( chan=0;chan<3;chan++ ) {
+          SID.voiceOff(chan);
+          curNote[chan] = 0;
+        }
         break;
 
       break;
