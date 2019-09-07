@@ -421,6 +421,18 @@ void SID6581::setCutoff( uint8_t vol ) {
   writeData();
 }
 
+void SID6581::modulateCutoff( float mod ) {
+  //mod = mod; //mod >> 4;
+  // Update immediately
+  setAddress( SID6581_REG_FCLO );
+  setData( (sidchip.filter.frequency * mod ) ); // & B00001111);
+  writeData();
+
+  setAddress( SID6581_REG_FCHI );
+  setData( (int)(sidchip.filter.frequency * mod)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
+  writeData();  
+}
+
 void SID6581::setFilterOn (int chan, bool status) {
   if (status) {
     sidchip.filter.resfilt |= 1<<chan;
@@ -467,8 +479,5 @@ void SID6581::setFilterMode(int mode) {
   setData( sidchip.filter.modevol );
   writeData();  
 }
-
-
-
 
 SID6581 SID = SID6581();

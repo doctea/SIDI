@@ -149,6 +149,9 @@ void test_voice() {
 
 void loop() {
   int evt, chan, note, vel, foo;
+
+  //void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom);
+  LFOupdate(false, 0/*LFOmodeSelect*/, 10000.0f); // LFOdepth);
   
   while( Serial.available() > 0 ) {
     evt = forceRead();
@@ -161,6 +164,7 @@ void loop() {
       case MIDI_NOTE_ON: //0x90:
         note = forceRead();
         vel = forceRead();
+        LFOupdate(true, 0, 10000); //, LFOdepth);
         if( /*chan < 3 &&*/ sidinote[note] != 0 ) {
           if (poly) { 
             if (chan==0) { 

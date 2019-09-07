@@ -36,6 +36,13 @@
 
 #define MIDI_CC_EMU MCB+PPV+8
 
+// 36+16 = 52
+#define MCL MCB+PPV+16
+
+#define MIDI_CC_LFO_SPEED MCL+0
+#define MIDI_CC_LFO_DEPTH MCL+1
+#define MIDI_CC_LFO_MODE MCL+2
+
 #define V_A 0
 #define V_D 1
 #define V_S 2
@@ -57,7 +64,6 @@ int voice_pw_lo[3] = {
 /*int voice_detune[3] = {
   64, 64 ,64
 };*/
-
 
 void decodeCC( int chan, byte controller, byte value ) {
   bool update_env = false;
@@ -199,6 +205,11 @@ void decodeCC( int chan, byte controller, byte value ) {
           curNote[chan] = 0;
         }
         break;
+
+      default:
+        decodeCC_lfo(chan,controller,value);
+        break;
+
 
       break;
   }

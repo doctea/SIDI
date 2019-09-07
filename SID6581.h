@@ -268,6 +268,9 @@ class SID6581 {
     void setFilterOn(int chan, bool status);
     void setFilterMode(int mode);
 
+
+    void modulateCutoff( float mod );
+
     
     // These are pretty dangerous
     void setAddress( uint16_t what );
