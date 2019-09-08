@@ -22,6 +22,12 @@ float FILfactor = 1;
 // pitch lfo
 //waveform1.frequency(noteFreqs[note] * bendFactor * LFOpitch);
 
+void sysex(int v1, int v2) {
+  Serial.write(MIDI_SYSEX);
+  Serial.write(v1); //(int)(127 * (LFOrange * LFO) + LFOdepth));
+  Serial.write(v2);
+  Serial.write(MIDI_SYSEX_END);
+}
 
 void decodeCC_lfo(int chan, int controller, int value) {
   switch(controller) {
@@ -36,7 +42,7 @@ void decodeCC_lfo(int chan, int controller, int value) {
           
     // change lfo depth
         case MIDI_CC_LFO_DEPTH:
-          LFOdepth = value * DIV127;
+          LFOdepth = 2* (value * DIV127);
           break;
     
     // change lfo mode
@@ -57,9 +63,9 @@ void decodeCC_lfo(int chan, int controller, int value) {
 
 void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
   static float LFO = 0;
-  static unsigned long LFOtime = 0;
+  static /*unsigned long*/ uint32_t LFOtime = 0;
   static bool LFOdirection = false;
-  unsigned long currentMicros = micros();
+  /*unsigned *//*long*/ uint32_t currentMicros = micros();
   static bool LFOstop = false;
   static float LFOrange = 0;
   static byte oldMode = 0;
@@ -72,7 +78,8 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
   mode = LFOmodeSelect;
 
   if (currentMicros - LFOtime >= LFOspeed) {
-    int delta = (currentMicros - LFOtime)/LFOspeed;
+    //int delta = 1; 
+    float delta = (currentMicros - LFOtime)/(LFOspeed);
     LFOtime = currentMicros;
 
     if (mode != oldMode) {
@@ -99,6 +106,10 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
     //LFOrange = 0.5-LFOdepth; //DIV127 * (64 - LFOdepth);
     //LFOdepth = 1;
 
+#define bias 1
+
+    //sysex(mode,(byte)((int)LFO*10));
+
     // LFO Modes
     switch (mode) {
 
@@ -107,21 +118,23 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
         return;
         break;
       case 1: //Filter FREE
-        SID.modulateCutoff(0.5+((LFOrange * LFO) + LFOdepth));
+        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
         break;
       case 2: //Filter DOWN
         if (retriggered == true) {
           LFOdirection = true;
           LFO = 1.0;
         }
-        SID.modulateCutoff(0.5+((LFOrange * LFO) + LFOdepth));
+        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+        //sysex(2,(byte)(int)(LFO*10));
         break;
       case 3: //Filter UP
         if (retriggered == true) {
           LFOdirection = false;
           LFO = 0;
         }
-        SID.modulateCutoff(0.5+((LFOrange * LFO) + LFOdepth));
+        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+        //sysex(3,(byte)((int)LFO*10));
         break;
       case 4: //Filter 1-DN
         if (retriggered == true) {
@@ -129,7 +142,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = true;
           LFO = 1.0;
         }
-        if (LFOstop == false) SID.modulateCutoff(0.5+((LFOrange * LFO) + LFOdepth));
+        if (LFOstop == false) SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
         break;
       case 5: //Filter 1-UP
         if (retriggered == true) {
@@ -137,7 +150,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = false;
           LFO = 0;
         }
-        if (LFOstop == false) SID.modulateCutoff(0.5+((LFOrange * LFO) + LFOdepth));
+        if (LFOstop == false) SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
         break;
       case 8: //Pitch OFF
         return;
@@ -191,19 +204,22 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
     // Update LFO
     if (LFOdirection == false) { //UP
       //LFO = (LFO + 0.01);
-      LFO = (LFO + (0.01*delta));
+      LFO = (LFO + (0.01*(float)delta));
       if (LFO >= 1) {
         LFOdirection = true;
         LFOstop = true;
+        //sysex(1,0);
       }
     }
 
     if (LFOdirection == true) { //Down
       //LFO = (LFO - 0.01);
-      LFO = (LFO - (0.01*delta));
+      LFO = (LFO - (0.01*(float)delta));
       if (LFO <= 0) {
         LFOdirection = false;
         LFOstop = true;
+        //Serial.write(3);
+        //sysex(1,1);
       }
     }
   }

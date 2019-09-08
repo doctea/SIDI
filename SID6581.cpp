@@ -410,7 +410,7 @@ void SID6581::setCutoff( uint8_t vol ) {
   //sidchip.filter. |= (vol & B00001111);
 
   sidchip.filter.frequency = vol * 16;
-  
+  /*
   // Update immediately
   setAddress( SID6581_REG_FCLO );
   setData( (sidchip.filter.frequency ) ); // & B00001111);
@@ -418,20 +418,28 @@ void SID6581::setCutoff( uint8_t vol ) {
 
   setAddress( SID6581_REG_FCHI );
   setData( (sidchip.filter.frequency)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
-  writeData();
+  writeData();*/
 }
 
 void SID6581::modulateCutoff( float mod ) {
-  //mod = 1;
-  mod = mod; //mod >> 4;
-  // Update immediately
-  setAddress( SID6581_REG_FCLO );
-  setData( (int)(sidchip.filter.frequency * mod ) ); // & B00001111);
-  writeData();
+  static float last_mod;
+  static int last_freq;
 
-  setAddress( SID6581_REG_FCHI );
-  setData( (int)(sidchip.filter.frequency * mod)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
-  writeData();  
+  if (last_mod!=mod || last_freq !=sidchip.filter.frequency) {
+    last_mod = mod;
+    last_freq = sidchip.filter.frequency;
+    //mod = 1;
+    mod = mod; //mod >> 4;
+    //mod = 0.5-mod; // gives an interseting effect like a mod envelope when combined with hacked mode 3 ie without 0 bias applied
+    // Update immediately
+    setAddress( SID6581_REG_FCLO );
+    setData( (int)((int)sidchip.filter.frequency * mod ) ); // & B00001111);
+    writeData();
+  
+    setAddress( SID6581_REG_FCHI );
+    setData( (int)((int)sidchip.filter.frequency * mod)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
+    writeData();  
+  }
 }
 
 void SID6581::setFilterOn (int chan, bool status) {
