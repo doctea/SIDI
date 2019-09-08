@@ -43,6 +43,8 @@
 #define MIDI_CC_LFO_DEPTH MCL+1
 #define MIDI_CC_LFO_MODE MCL+2
 
+#define MIDI_CC_LFO_ATTACK MCL+3
+
 #define V_A 0
 #define V_D 1
 #define V_S 2

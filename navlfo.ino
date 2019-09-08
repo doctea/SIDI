@@ -8,6 +8,7 @@ const float DIV127 = (1.0 / 127.0);
 unsigned int LFOspeed = 2000;
 float LFOpitch = 1;
 float LFOdepth = 1;
+float LFOattack = 0;
 byte LFOmodeSelect = 1;
 
 int FILfreq =  10000;
@@ -22,7 +23,7 @@ float FILfactor = 1;
 // pitch lfo
 //waveform1.frequency(noteFreqs[note] * bendFactor * LFOpitch);
 
-void sysex(int v1, int v2) {
+void sysex(byte v1, byte v2) {
   Serial.write(MIDI_SYSEX);
   Serial.write(v1); //(int)(127 * (LFOrange * LFO) + LFOdepth));
   Serial.write(v2);
@@ -49,6 +50,10 @@ void decodeCC_lfo(int chan, int controller, int value) {
         case MIDI_CC_LFO_MODE:
           LFOmodeSelect = value;
           break;
+
+        case MIDI_CC_LFO_ATTACK:
+          LFOattack = 1-(value * DIV127);
+          break;
   }
 }
 
@@ -63,9 +68,12 @@ void decodeCC_lfo(int chan, int controller, int value) {
 
 void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
   static float LFO = 0;
-  static /*unsigned long*/ uint32_t LFOtime = 0;
+  static unsigned long LFOtime = 0;
   static bool LFOdirection = false;
-  /*unsigned *//*long*/ uint32_t currentMicros = micros();
+  unsigned long currentMicros = micros();
+  //uint32_t 
+  
+  static unsigned long retrigMicros = 0;
   static bool LFOstop = false;
   static float LFOrange = 0;
   static byte oldMode = 0;
@@ -103,13 +111,15 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
     LFOrange = (FILtop/16384) - FILbottom;
     //if (LFOrange < 0) LFOrange = 0;
 
-    //LFOrange = 0.5-LFOdepth; //DIV127 * (64 - LFOdepth);
-    //LFOdepth = 1;
-
 #define bias 1
+    //float bias = 1;
 
-    //sysex(mode,(byte)((int)LFO*10));
-
+    // between 0 and 1, how much of the attack period has elapsed?
+    // time since retrigMicros s=d/t t=d/s d=t*s
+    float atkfactor = (((currentMicros-retrigMicros)/(LFOspeed*1000)) * LFOattack);
+    if (atkfactor>1) atkfactor = 1;
+    if (atkfactor<0) atkfactor = 0;
+    
     // LFO Modes
     switch (mode) {
 
@@ -122,80 +132,42 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
         break;
       case 2: //Filter DOWN
         if (retriggered == true) {
+          retrigMicros = currentMicros;
+
           LFOdirection = true;
           LFO = 1.0;
         }
-        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+
+        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO) + (LFOdepth))));
         //sysex(2,(byte)(int)(LFO*10));
         break;
       case 3: //Filter UP
         if (retriggered == true) {
+          retrigMicros = currentMicros;
+
           LFOdirection = false;
           LFO = 0;
         }
-        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO) + LFOdepth)));
         //sysex(3,(byte)((int)LFO*10));
         break;
       case 4: //Filter 1-DN
         if (retriggered == true) {
+          retrigMicros = currentMicros;
           LFOstop = false;
           LFOdirection = true;
           LFO = 1.0;
         }
-        if (LFOstop == false) SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO) + LFOdepth));
         break;
       case 5: //Filter 1-UP
         if (retriggered == true) {
+          retrigMicros = currentMicros;
           LFOstop = false;
           LFOdirection = false;
           LFO = 0;
         }
-        if (LFOstop == false) SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
-        break;
-      case 8: //Pitch OFF
-        return;
-        break;
-      case 9: //Pitch FREE
-        LFOpitch = (LFO * LFOdepth) + 1;
-        oscSet();
-        break;
-      case 10: //Pitch DOWN
-        if (retriggered == true) {
-          LFOdirection = true;
-          LFO = 1.0;
-        }
-        LFOpitch = (LFO * LFOdepth) + 1;
-        oscSet();
-        break;
-      case 11: //Pitch UP
-        if (retriggered == true) {
-          LFOdirection = false;
-          LFO = 0;
-        }
-        LFOpitch = (LFO * LFOdepth) + 1;
-        oscSet();
-        break;
-      case 12: //Pitch 1-DN
-        if (retriggered == true) {
-          LFOstop = false;
-          LFOdirection = true;
-          LFO = 1.0;
-        }
-        if (LFOstop == false) {
-          LFOpitch = (LFO * LFOdepth) + 1;
-          oscSet();
-        }
-        break;
-      case 13: //Pitch 1-UP
-        if (retriggered == true) {
-          LFOstop = false;
-          LFOdirection = false;
-          LFO = 0;
-        }
-        if (LFOstop == false) {
-          LFOpitch = (LFO * LFOdepth) + 1;
-          oscSet();
-        }
+        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO) + LFOdepth));
         break;
     }
 

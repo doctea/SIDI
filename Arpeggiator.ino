@@ -241,3 +241,52 @@ void update_arpeggios() {
                   
 
         break;*/
+
+
+
+
+        /*case 8: //Pitch OFF
+        return;
+        break;
+      case 9: //Pitch FREE
+        LFOpitch = (LFO * LFOdepth) + 1;
+        oscSet();
+        break;
+      case 10: //Pitch DOWN
+        if (retriggered == true) {
+          LFOdirection = true;
+          LFO = 1.0;
+        }
+        LFOpitch = (LFO * LFOdepth) + 1;
+        oscSet();
+        break;
+      case 11: //Pitch UP
+        if (retriggered == true) {
+          LFOdirection = false;
+          LFO = 0;
+        }
+        LFOpitch = (LFO * LFOdepth) + 1;
+        oscSet();
+        break;
+      case 12: //Pitch 1-DN
+        if (retriggered == true) {
+          LFOstop = false;
+          LFOdirection = true;
+          LFO = 1.0;
+        }
+        if (LFOstop == false) {
+          LFOpitch = (LFO * LFOdepth) + 1;
+          oscSet();
+        }
+        break;
+      case 13: //Pitch 1-UP
+        if (retriggered == true) {
+          LFOstop = false;
+          LFOdirection = false;
+          LFO = 0;
+        }
+        if (LFOstop == false) {
+          LFOpitch = (LFO * LFOdepth) + 1;
+          oscSet();
+        }
+        break;*/
