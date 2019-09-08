@@ -54,6 +54,15 @@ void decodeCC_lfo(int chan, int controller, int value) {
         case MIDI_CC_LFO_ATTACK:
           LFOattack = 1-(value * DIV127);
           break;
+
+
+      case MIDI_CC_PW_HI: // actually pw lfo amt
+        //voice_pw_lo[chan] = value;
+        SID.voice_pulfactor[chan] = value * DIV127;
+        //SID.setPulseWidth(chan, voice_pw_lo[chan]<<4); // & voice_pw_hi[chan]<<12); //value<<4);
+        break;
+
+          
   }
 }
 
@@ -114,11 +123,23 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
 #define bias 1
     //float bias = 1;
 
+    
+
     // between 0 and 1, how much of the attack period has elapsed?
     // time since retrigMicros s=d/t t=d/s d=t*s
-    float atkfactor = (((currentMicros-retrigMicros)/(LFOspeed*1000)) * LFOattack);
+    float t = ((currentMicros-retrigMicros)/(LFOspeed*1000)) ;
+    float atkfactor = t * LFOattack;
     if (atkfactor>1) atkfactor = 1;
     if (atkfactor<0) atkfactor = 0;
+
+        // update pulse widths by lfo too..?
+    for (int i = 0 ; i < 3 ; i++) {
+      float pulfactor = t * SID.voice_pulfactor[i];// LFO; //constrain(((currentMicros%LFOspeed)/(LFOspeed*1000)),0,1); // * SID.voice_pulfactor[i]);
+
+      //SID.setPulseWidth(i, ((int)(((currentMicros-retrigMicros)/(LFOspeed*1000))*SID.voice_pulfactor[i] + SID.sidchip.voices[i].width)<<4));
+      //SID.setPulseWidth(i,(SID.sidchip.voices[i].width + (int)(LFO*pulfactor*100*SID.voice_pulfactor[i]))); //(LFOtime * SID.voice_pulfactor[i]))<<4);
+      SID.setPulseWidth(i,( SID.sidchip.voices[i].width + (pulfactor*SID.sidchip.voices[i].width))); //+ (uint8_t)(200*(atkfactor*pulfactor))))<<4); //(int)(SID.voice_pulfactor[i]*pulfactor)) << 4); // (1+(pulfactor * 127*SID.voice_pulfactor[i]))); //+ (100 * pulfactor * SID.voice_pulfactor[i]));
+    }
     
     // LFO Modes
     switch (mode) {

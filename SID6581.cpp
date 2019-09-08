@@ -46,9 +46,16 @@
 #include <Arduino.h>
 #include "SID6581.h"
 
+
+
+
 SID6581::SID6581() {
   int x;
   
+  float voice_pulfactor[3] = {
+    0, 0, 0
+  };
+    
   // Make sure our "chip" is completely 0d
   memset( &sidchip, 0, sizeof(sid6581_chip_t) );
   
@@ -241,7 +248,9 @@ void SID6581::updateVoiceFrequency( int which ) {
 void SID6581::setPulseWidth( int voice, uint16_t width ) {
   uint8_t hi, lo;
   
-  sidchip.voices[voice].width = width;
+  //sidchip.voices[voice].width = width;
+
+  //width += ((int)((4096*voice_pulfactor[voice])-2048));
   
   switch( voice ) {
     case 0:

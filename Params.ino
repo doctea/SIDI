@@ -9,7 +9,7 @@
 #define MIDI_CC_PW_LO MCB+5
 #define MIDI_CC_DETUNE MCB+6
 
-#define MIDI_CC_SHAPE MCB+7
+#define MIDI_CC_OCTAVE MCB+7
 
 #define MIDI_CC_FILTER MCB+8
 
@@ -63,6 +63,11 @@ int voice_pw_lo[3] = {
   16, 16, 16
 };
 
+
+/*extern float voice_pulfactor[3] = {
+  0, 0, 0
+};*/
+
 /*int voice_detune[3] = {
   64, 64 ,64
 };*/
@@ -92,10 +97,14 @@ void decodeCC( int chan, byte controller, byte value ) {
       voice_adsr[chan][V_R] = value;
       update_env = true;
       break;
+
+      
       
     case MIDI_CC_PW_LO:
       voice_pw_lo[chan] = value;
-      SID.setPulseWidth(chan, voice_pw_lo[chan]<<4); // & voice_pw_hi[chan]<<12); //value<<4);
+      //voice_pulfactor[chan] = value/127;
+      //SID.setPulseWidth(chan, voice_pw_lo[chan]<<4); // & voice_pw_hi[chan]<<12); //value<<4);
+      SID.sidchip.voices[chan].width = value;
       break;
 
     /*case MIDI_CC_PW_HI:
@@ -108,22 +117,19 @@ void decodeCC( int chan, byte controller, byte value ) {
       //float range = sidinote[curNote[chan+1]] - sidinote[curNote[chan-1]];
       //float adjust = range/(value-64);
 
-      voice_detune[chan] = value;
-    
-      SID.setFrequency(chan, sidinote[curNote[chan]] + voice_detune[chan]-64); //(int)adjust); //range/((127/64-value)));
-      SID.updateVoiceFrequency(chan);
+      voice_detune[chan] = (/*127/*/value)-64;
+      if (curNote[chan]!=0) {
+        SID.setFrequency(chan, sidinote[voice_octave[chan] + curNote[chan]] + (voice_detune[chan]) ); //(100*voice_detune[chan])); //(int)adjust); //range/((127/64-value)));
+        SID.updateVoiceFrequency(chan);
+      }
 
       break;
   
-     case MIDI_CC_SHAPE:
-      if (value<32) {
-            SID.setShape (chan, SID6581_MASK_TRIANGLE);
-      } else if (value < 64) {
-            SID.setShape (chan, SID6581_MASK_SAWTOOTH);
-      } else if (value < 96) {
-            SID.setShape (chan, SID6581_MASK_SQUARE);
-      } else {
-            SID.setShape (chan, SID6581_MASK_NOISE);
+     case MIDI_CC_OCTAVE:
+      voice_octave[chan] = (value/2)-48;
+      if (curNote[chan]!=0) {
+        SID.setFrequency(chan, sidinote[voice_octave[chan] + curNote[chan]] + voice_detune[chan]);
+        SID.updateVoiceFrequency(chan);
       }
       break;
 

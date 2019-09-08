@@ -49,9 +49,14 @@
 /** Current note for all 3 channels */
 unsigned long curNote[3] = { 0, 0, 0 };
 
-int voice_detune[3] = {
-  64, 64 ,64
+int voice_octave[3] = {
+  0,0,0
 };
+
+float voice_detune[3] = {
+  1, 1, 1
+};
+
 bool poly = false;
 
 /**
@@ -132,6 +137,10 @@ void test_voice() {
               SID.voiceOff(0);
 
               delay(500);
+
+              SID.setFilterOn(SID6581_MASK_FLT_EXT , true);
+
+              
                 
 }
 
@@ -183,14 +192,18 @@ void loop() {
                 chan = instance%3;
                 if( curNote[chan] != note ) { // not already playing note 
   
-                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
+                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
                   SID.updateVoiceFrequency( chan );
                   //SID.setVolume(vel>>4);
 
                   LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
                   
-                  //if( curNote[chan] == 0 )
+                  if( curNote[chan] == 0 ) {
                     SID.voiceOn(chan);
+                  } else {
+                    SID.voiceOff(chan);
+                    SID.voiceOn(chan);
+                  }
                     
                   curNote[chan] = note;
                   instance++;
@@ -207,7 +220,7 @@ void loop() {
               } else {
                 if( curNote[chan] != note ) {
 
-                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
+                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
                   SID.updateVoiceFrequency( chan );
                   //SID.setVolume(vel>>4);
                   
@@ -224,7 +237,7 @@ void loop() {
             chan %= 3;
             // mono mode - play all voices simultaneously
             if( evt == MIDI_NOTE_OFF || vel == 0 ) {  // note off - stop all voices
-              if( curNote[chan] == note ) {
+              if( curNote[0] == note ) {
                 SID.voiceOff(0);
                 SID.voiceOff(1);
                 SID.voiceOff(2);
@@ -237,7 +250,7 @@ void loop() {
                 LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
 
                 for (chan = 0 ; chan < 3 ; chan++) {
-                  SID.setFrequency( chan, sidinote[note] + (voice_detune[chan]-64));
+                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
                   SID.updateVoiceFrequency( chan );
                   //SID.setVolume(vel>>4);
                 
