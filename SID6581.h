@@ -236,6 +236,8 @@ typedef struct {
 class SID6581 {
   public:
     sid6581_chip_t sidchip;
+
+    float voice_pulfactor[3];
     
     SID6581();
     
