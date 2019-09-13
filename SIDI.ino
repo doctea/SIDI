@@ -179,20 +179,32 @@ void loop() {
               static int instance;
               // ignore channel
               if( evt == MIDI_NOTE_OFF || vel == 0 ) {
-                // turn off the channel thats playing this note
+                // turn off any channels that are playing this note
                 for (int i = 0 ; i < 3 ; i++) {
                   if( curNote[i] == note ) {
                     SID.voiceOff(i);
                     curNote[i] = 0;
                     instance--;
-                    break;
+                    //break;
                   }
                 }
               } else {
-                chan = instance%3;
-                if( curNote[chan] != note ) { // not already playing note 
-  
-                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
+                // pick a new channel to play this note on 
+                //chan = instance%3;
+                bool already_playing = false;
+                for (int i = 0 ; i < 3 ; i++) {
+                  if (curNote[i] == note) {
+                    already_playing = true;
+                  } else if (curNote[i] == 0) {
+                    chan = i;
+                    break;
+                  }
+                }
+                if( !already_playing) { //curNote[chan] != note ) { // not already playing note 
+                  SID.setFrequency( 
+                    chan, sidinote[voice_octave[chan] + note] + 
+                    (voice_detune[chan])
+                  );
                   SID.updateVoiceFrequency( chan );
                   //SID.setVolume(vel>>4);
 
@@ -210,8 +222,8 @@ void loop() {
                 }
               }              
             } else {
-              chan %= 3;
               // poly mode - play voices individually by channel
+              chan %= 3;
               if( evt == MIDI_NOTE_OFF || vel == 0 ) {
                 if( curNote[chan] == note ) {
                   SID.voiceOff(chan);
@@ -237,13 +249,15 @@ void loop() {
             chan %= 3;
             // mono mode - play all voices simultaneously
             if( evt == MIDI_NOTE_OFF || vel == 0 ) {  // note off - stop all voices
-              if( curNote[0] == note ) {
-                SID.voiceOff(0);
-                SID.voiceOff(1);
-                SID.voiceOff(2);
-                curNote[0] = 0;
-                curNote[1] = 0;
-                curNote[2] = 0;
+              for (chan = 0 ; chan < 3 ; chan++) {
+                if( curNote[chan] == note ) {
+                  SID.voiceOff(chan);
+                  //SID.voiceOff(1);
+                  //SID.voiceOff(2);
+                  curNote[chan] = 0;
+                  //curNote[1] = 0;
+                  //curNote[2] = 0;
+                }
               }
             } else {
               if( curNote[0] != note ) {

@@ -246,39 +246,43 @@ void SID6581::updateVoiceFrequency( int which ) {
 }
 
 void SID6581::setPulseWidth( int voice, uint16_t width ) {
+  static uint16_t last_width[3] = { 0,0,0 };
   uint8_t hi, lo;
-  
   //sidchip.voices[voice].width = width;
 
   //width += ((int)((4096*voice_pulfactor[voice])-2048));
   
-  switch( voice ) {
-    case 0:
-      hi = SID6581_REG_P1HI;
-      lo = SID6581_REG_P1LO;
-      break;
-      
-    case 1:
-      hi = SID6581_REG_P2HI;
-      lo = SID6581_REG_P2LO;
-      break;
-      
-    case 2:
-      hi = SID6581_REG_P3HI;
-      lo = SID6581_REG_P3LO;
-      break;
-      
-    default:
-      return;
+  if (last_width[voice]!=width) {
+    last_width[voice] = width;
+    
+    switch( voice ) {
+      case 0:
+        hi = SID6581_REG_P1HI;
+        lo = SID6581_REG_P1LO;
+        break;
+        
+      case 1:
+        hi = SID6581_REG_P2HI;
+        lo = SID6581_REG_P2LO;
+        break;
+        
+      case 2:
+        hi = SID6581_REG_P3HI;
+        lo = SID6581_REG_P3LO;
+        break;
+        
+      default:
+        return;
+    }
+    
+    setAddress( lo );
+    setData( width );
+    writeData();
+    
+    setAddress( hi );
+    setData( (width >> 8) & B00001111 );
+    writeData();
   }
-  
-  setAddress( lo );
-  setData( width );
-  writeData();
-  
-  setAddress( hi );
-  setData( (width >> 8) & B00001111 );
-  writeData();
       
 }
 

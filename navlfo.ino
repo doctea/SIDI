@@ -134,11 +134,15 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
 
         // update pulse widths by lfo too..?
     for (int i = 0 ; i < 3 ; i++) {
-      float pulfactor = t * SID.voice_pulfactor[i];// LFO; //constrain(((currentMicros%LFOspeed)/(LFOspeed*1000)),0,1); // * SID.voice_pulfactor[i]);
+      //float pulfactor = t * SID.voice_pulfactor[i];// LFO; //constrain(((currentMicros%LFOspeed)/(LFOspeed*1000)),0,1); // * SID.voice_pulfactor[i]);
+      float pulfactor = (LFO * SID.voice_pulfactor[i]) * (atkfactor || 1);
 
       //SID.setPulseWidth(i, ((int)(((currentMicros-retrigMicros)/(LFOspeed*1000))*SID.voice_pulfactor[i] + SID.sidchip.voices[i].width)<<4));
       //SID.setPulseWidth(i,(SID.sidchip.voices[i].width + (int)(LFO*pulfactor*100*SID.voice_pulfactor[i]))); //(LFOtime * SID.voice_pulfactor[i]))<<4);
-      SID.setPulseWidth(i,( SID.sidchip.voices[i].width + (pulfactor*SID.sidchip.voices[i].width))); //+ (uint8_t)(200*(atkfactor*pulfactor))))<<4); //(int)(SID.voice_pulfactor[i]*pulfactor)) << 4); // (1+(pulfactor * 127*SID.voice_pulfactor[i]))); //+ (100 * pulfactor * SID.voice_pulfactor[i]));
+      SID.setPulseWidth(i,
+        SID.sidchip.voices[i].width + 
+        (pulfactor*100) //SID.sidchip.voices[i].width))
+      ); //+ (uint8_t)(200*(atkfactor*pulfactor))))<<4); //(int)(SID.voice_pulfactor[i]*pulfactor)) << 4); // (1+(pulfactor * 127*SID.voice_pulfactor[i]))); //+ (100 * pulfactor * SID.voice_pulfactor[i]));
     }
     
     // LFO Modes

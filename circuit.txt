@@ -1,0 +1,35 @@
+Arduino(digside)	ARMSID(left)	Arduino(anlgside)
+
+		1 (not used in ARMSID)
+		2 (not used in ARMSID)
+		3 (not used in ARMSID)
+		4 (not used in ARMSID)
+
+		5	RESET		8
+		6	CLOCK		9
+		7	RW		10
+		8	CS		11
+
+A0		9	A0
+A1		10	A1
+A2		11	A2
+A3		12	A3
+A4		13	A4
+gnd		14
+
+			ARMSID(right)
+A5		15	D0
+		16	D1		13
+		17	D2		2
+		18	D3		3
+		19	D4		4
+		20	D5		5
+		21	D6		6
+		22	D7		7
+		23	POTY
+		24	POTX
+5v		25	5v		
+		26	extin
+		27	aout		-> jack socket -> gnd
+vin		28	vin		
+
