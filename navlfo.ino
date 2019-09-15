@@ -43,7 +43,7 @@ void decodeCC_lfo(int chan, int controller, int value) {
           
     // change lfo depth
         case MIDI_CC_LFO_DEPTH:
-          LFOdepth = 2* (value * DIV127);
+          LFOdepth = 2.0 * ((float)value * DIV127);
           break;
     
     // change lfo mode
@@ -52,13 +52,13 @@ void decodeCC_lfo(int chan, int controller, int value) {
           break;
 
         case MIDI_CC_LFO_ATTACK:
-          LFOattack = 1-(value * DIV127);
+          LFOattack = 1.0-((float)value * DIV127);
           break;
 
 
       case MIDI_CC_PW_LFO: // actually pw lfo amt
         //voice_pw_lo[chan] = value;
-        SID.voice_pulfactor[chan] = value * DIV127;
+        SID.voice_pulfactor[chan] = (float)value * DIV127;
         //SID.setPulseWidth(chan, voice_pw_lo[chan]<<4); // & voice_pw_hi[chan]<<12); //value<<4);
         break;
 

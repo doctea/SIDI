@@ -145,19 +145,34 @@ void test_voice() {
               
               //if( curNote[chan] == 0 )
                 SID.voiceOn(i);
-                delay(200);
+                delay(250);
                 SID.voiceOff(i);
                 //delay(200);
 
-            SID.setVolume(15);
+              SID.setVolume(15);
               SID.setFrequency( i, sidinote[60] );
               SID.updateVoiceFrequency( i );
 
-              delay(500);
+              delay(250);
 
               SID.voiceOff(i);
 
-              delay(500);
+              //playNote(0, sidinote[50]);
+              //playNote(1, sidinote[54]);
+              //playNote(1, sidinote[57]);
+
+              for (int x = 0 ; x < 10 ; x++) {
+                SID.setFrequency(0, i ^ 2);
+                SID.updateVoiceFrequency(i);
+              }
+
+              delay (500);
+
+              /*playNote(0, 0);
+              playNote(1, 0);
+              playNote(2, 0);*/
+
+              //delay(500);
   }
 
               //SID.setFilterOn(SID6581_MASK_FLT_EXT , true);
@@ -193,18 +208,24 @@ float getPortaAdjust(int chan, int note) {
   if (voice_portamicros[chan]==0) 
     return 0;
 
-  float porta_factor = (1000/127);
+  long porta_factor = ((float)1000/127);
     
-  long elapsed = ((micros()-voice_portamicros[chan])/1000);
-  if (elapsed < (voice_porta[chan]*porta_factor) ) {
+  long elapsed = ((micros()-voice_portamicros[chan])/1000l);
+  if (elapsed <= (voice_porta[chan]*porta_factor) ) {
     //elapsed = (voice_porta[chan]*5)-elapsed;
     float a = ((float)elapsed/(float)(voice_porta[chan]*porta_factor)); // * freqdiff;// * (((micros()-voice_portamicros[chan])) / voice_porta[chan]); // (freqdiff/120);
-    //if (a<=(-1*freqdiff)) a = -1;
+    //float a = 1.0-((float)(voice_porta[chan]*100)/((float)elapsed));   //
+
+    // what proportion of (voice_porta[chan]*porta_factor) is elapsed ?
+    // elapsed is what percent of voice (voice_porta[chan]*porta_factor)?
+    // elapse is x percent of y ?
+    
+        //if (a<=(-1*freqdiff)) a = -1;
     //if (a>=freqdiff) a = 1;
     //a = constrain(a,-1.0,1.0);
     //return (/*-1.0**/freqdiff) * ((float)elapsed/(float)(voice_porta[chan]*porta_factor));
     //if (note < lastNote[chan]) return freqdiff*-1;
-    return freqdiff * a;///12;
+    return (int)(freqdiff * a); //((log(a)*(freqdiff)));///12;
     /*unsigned long elapsed = (micros()-voice_portamicros[chan]);
     //if (elapsed > voice_porta[chan]) {
       float a = (voice_porta[chan]/elapsed)*1000; //voice_porta[chan]*(voice_porta[chan]/elapsed);///voice_porta[chan];
