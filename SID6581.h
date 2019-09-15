@@ -116,26 +116,76 @@
 // Various pins that do useful things for us
 // --------------------------------------------------------------------------
 //
+
+//8 -> 7 RW
+//9 -> 6 CLK
+//10 -> 8 SEL
+//11 -> 5 RES
+
+
+
+#define ALT_WIRE TRUE
+
+#ifdef ALT_WIRE
+
 #ifndef SID6581_PIN_RESET
-#define SID6581_PIN_RESET 8
+#define SID6581_PIN_RESET 11
+//8
 #endif
 
+// see the note in circuit.txt -- had to swap these two lines in hardware to get chip to work, regardless of how these pins are configured?
 #ifndef SID6581_PIN_CLOCK
 #define SID6581_PIN_CLOCK 9
+//9
 #endif
 
+// see the note in circuit.txt -- had to swap these two lines in hardware to get chip to work, regardless of how these pins are configured?
 #ifndef SID6581_PIN_RW
-#define SID6581_PIN_RW 10
+#define SID6581_PIN_RW 8
+//10
 #endif
 
 #ifndef SID6581_PIN_SEL
-#define SID6581_PIN_SEL 11
+#define SID6581_PIN_SEL 10
+//11
 #endif
 
 // This isn't really used anymore...
 #ifndef SID6581_PIN_TIMER
 #define SID6581_PIN_TIMER 12
 #endif
+
+#endif
+/*
+
+#ifndef ALT_WIRE
+
+#ifndef SID6581_PIN_RESET
+#define SID6581_PIN_RESET 11
+#endif
+
+#ifndef SID6581_PIN_CLOCK
+//#define SID6581_PIN_CLOCK 9
+#define SID6581_PIN_CLOCK 9
+#endif
+
+#ifndef SID6581_PIN_RW
+#define SID6581_PIN_RW 8
+//#define SID6581_PIN_RW 10
+#endif
+
+#ifndef SID6581_PIN_SEL
+#define SID6581_PIN_SEL 8
+#endif
+
+// This isn't really used anymore...
+#ifndef SID6581_PIN_TIMER
+#define SID6581_PIN_TIMER 12
+#endif
+
+#endif
+*/
+
 
 // --------------------------------------------------------------------------
 // SID6581 CONTROL REGISTERS 

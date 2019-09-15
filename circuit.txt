@@ -5,10 +5,10 @@ Arduino(digside)	ARMSID(left)	Arduino(anlgside)
 		3 (not used in ARMSID)
 		4 (not used in ARMSID)
 
-		5	RESET		8
-		6	CLOCK		9
-		7	RW		10
-		8	CS		11
+		5	RESET		11	
+		6	CLOCK		9	?!	couldn't get chip working unless i crossed these two lines over
+		7	RW		10	?!	even if i swapped the two pins definition in the software?!
+		8	CS		8
 
 A0		9	A0
 A1		10	A1
