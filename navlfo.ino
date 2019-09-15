@@ -132,6 +132,10 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
     if (atkfactor>1) atkfactor = 1;
     if (atkfactor<0) atkfactor = 0;
 
+    float mw = (float)(127-modwheel_value)/127;
+    float mw_pw = 1.0-((1.0-mw) * ((float)modwheel_pw_value)/127);
+    float mw_filt = 1.0-((1.0-mw) * ((float)modwheel_filt_value)/127);
+    
         // update pulse widths by lfo too..?
     for (int i = 0 ; i < 3 ; i++) {
       //float pulfactor = t * SID.voice_pulfactor[i];// LFO; //constrain(((currentMicros%LFOspeed)/(LFOspeed*1000)),0,1); // * SID.voice_pulfactor[i]);
@@ -141,7 +145,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
       //SID.setPulseWidth(i,(SID.sidchip.voices[i].width + (int)(LFO*pulfactor*100*SID.voice_pulfactor[i]))); //(LFOtime * SID.voice_pulfactor[i]))<<4);
       SID.setPulseWidth(i,
         SID.sidchip.voices[i].width + 
-        (pulfactor*100) //SID.sidchip.voices[i].width))
+        (pulfactor*(mw_pw*100.0))//(float)modwheel_pw_value) //100) //SID.sidchip.voices[i].width))
       ); //+ (uint8_t)(200*(atkfactor*pulfactor))))<<4); //(int)(SID.voice_pulfactor[i]*pulfactor)) << 4); // (1+(pulfactor * 127*SID.voice_pulfactor[i]))); //+ (100 * pulfactor * SID.voice_pulfactor[i]));
     }
     
@@ -153,7 +157,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
         return;
         break;
       case 1: //Filter FREE
-        SID.modulateCutoff(bias+((LFOrange * LFO) + LFOdepth));
+        SID.modulateCutoff(bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
         break;
       case 2: //Filter DOWN
         if (retriggered == true) {
@@ -163,7 +167,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFO = 1.0;
         }
 
-        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO) + (LFOdepth))));
+        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO * (mw_filt)) + (LFOdepth))));
         //sysex(2,(byte)(int)(LFO*10));
         break;
       case 3: //Filter UP
@@ -173,7 +177,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = false;
           LFO = 0;
         }
-        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO) + LFOdepth)));
+        SID.modulateCutoff(atkfactor * (bias+((LFOrange * LFO * (mw_filt)) + LFOdepth)));
         //sysex(3,(byte)((int)LFO*10));
         break;
       case 4: //Filter 1-DN
@@ -183,7 +187,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = true;
           LFO = 1.0;
         }
-        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO) + LFOdepth));
+        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
         break;
       case 5: //Filter 1-UP
         if (retriggered == true) {
@@ -192,7 +196,7 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = false;
           LFO = 0;
         }
-        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO) + LFOdepth));
+        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
         break;
     }
 

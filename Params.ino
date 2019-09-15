@@ -1,3 +1,6 @@
+#define MIDI_CC_MODWHEEL 1
+
+
 #define MCB 16
 #define PPV 20 // params per voice
 
@@ -36,6 +39,9 @@
 #define MIDI_CC_FILTMODE_MUTEV3 MCB+PPV+7
 
 #define MIDI_CC_EMU MCB+PPV+8
+
+#define MIDI_CC_MW_FILT MCB+PPV+9
+#define MIDI_CC_MW_PW   MCB+PPV+10
 
 // 36+16 = 52
 #define MCL MCB+PPV+16
@@ -86,6 +92,19 @@ void decodeCC( int chan, byte controller, byte value ) {
   //chan-=1;
 
   switch (controller) {
+
+    case MIDI_CC_MODWHEEL:
+      modwheel_value = value;
+      break;
+
+    case MIDI_CC_MW_FILT:
+      modwheel_filt_value = value;
+      break;
+    
+    case MIDI_CC_MW_PW:
+      modwheel_pw_value = value;
+      break;
+        
     case MIDI_CC_ATK:
       voice_adsr[chan][V_A] = value;
       update_env = true;
@@ -105,8 +124,6 @@ void decodeCC( int chan, byte controller, byte value ) {
       voice_adsr[chan][V_R] = value;
       update_env = true;
       break;
-
-      
       
     case MIDI_CC_PW_LO:
       voice_pw_lo[chan] = value;

@@ -67,6 +67,10 @@ float voice_detune[3] = {
   1, 1, 1
 };
 
+int modwheel_value = 0;
+int modwheel_filt_value = 0;
+int modwheel_pw_value = 0;
+
 bool poly = false;
 
 /**
