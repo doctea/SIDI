@@ -78,6 +78,9 @@ SID6581::SID6581() {
   pinMode( SID6581_PIN_RESET, OUTPUT );
   pinMode( SID6581_PIN_RW, OUTPUT );
   pinMode( SID6581_PIN_SEL, OUTPUT );
+
+  pinMode( SID6581_PIN_CLOCK, OUTPUT );
+
   
   pinMode( SID6581_PIN_TIMER, INPUT );
 }
@@ -127,9 +130,14 @@ void SID6581::writeData(void) {
   
   // Wait for a high to come and go
   waitCycle();
+
+  
+  // Ensure chip is in READ mode to avoid accidental writes ? // doctea
+  digitalWrite( SID6581_PIN_RW, HIGH );
   
   // Deselect chip
   digitalWrite( SID6581_PIN_SEL, HIGH );
+
 }
 
 /*********************************************************************
@@ -213,6 +221,13 @@ void SID6581::setFrequency( int voice, uint16_t frequency ) {
 void SID6581::updateVoiceFrequency( int which ) {
   uint8_t hi, lo;
   uint16_t freq = sidchip.voices[which].frequency;
+
+  static uint16_t last_freq[3] = { 0, 0 , 0 };
+
+  if (last_freq[which]==freq)
+    return;
+
+  last_freq[which] = freq;
   
   switch( which ) {
     case 0:

@@ -56,7 +56,7 @@ void decodeCC_lfo(int chan, int controller, int value) {
           break;
 
 
-      case MIDI_CC_PW_HI: // actually pw lfo amt
+      case MIDI_CC_PW_LFO: // actually pw lfo amt
         //voice_pw_lo[chan] = value;
         SID.voice_pulfactor[chan] = value * DIV127;
         //SID.setPulseWidth(chan, voice_pw_lo[chan]<<4); // & voice_pw_hi[chan]<<12); //value<<4);

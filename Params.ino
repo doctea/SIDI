@@ -5,7 +5,7 @@
 #define MIDI_CC_DEC MCB+1
 #define MIDI_CC_SUS MCB+2
 #define MIDI_CC_REL MCB+3
-#define MIDI_CC_PW_HI MCB+4
+#define MIDI_CC_PW_LFO MCB+4
 #define MIDI_CC_PW_LO MCB+5
 #define MIDI_CC_DETUNE MCB+6
 
@@ -20,6 +20,7 @@
 #define MIDI_CC_SAW MCB+12
 #define MIDI_CC_PUL MCB+13
 #define MIDI_CC_NOI MCB+14
+#define MIDI_CC_TST MCB+15
 // todo: add one here for the test bit too?
 
 //36
@@ -45,6 +46,9 @@
 
 #define MIDI_CC_LFO_ATTACK MCL+3
 
+// 60?
+#define MIDI_CC_PORTA MCL+8
+
 #define V_A 0
 #define V_D 1
 #define V_S 2
@@ -62,6 +66,10 @@ int voice_pw_hi[3] = {
 int voice_pw_lo[3] = {
   16, 16, 16
 };
+
+/*int voice_porta[3] = {
+  0, 0, 0
+};*/
 
 
 /*extern float voice_pulfactor[3] = {
@@ -107,6 +115,11 @@ void decodeCC( int chan, byte controller, byte value ) {
       SID.sidchip.voices[chan].width = value;
       break;
 
+    case MIDI_CC_PORTA:
+      voice_porta[chan] = value;
+      //updatePorta();
+    break;
+
     /*case MIDI_CC_PW_HI:
       voice_pw_hi[chan] = value;
       SID.setPulseWidth(chan, voice_pw_lo[chan]<<4 & voice_pw_hi[chan]<<12); //value<<12);
@@ -118,19 +131,19 @@ void decodeCC( int chan, byte controller, byte value ) {
       //float adjust = range/(value-64);
 
       voice_detune[chan] = (/*127/*/value)-64;
-      if (curNote[chan]!=0) {
+      /*if (curNote[chan]!=0) {
         SID.setFrequency(chan, sidinote[voice_octave[chan] + curNote[chan]] + (voice_detune[chan]) ); //(100*voice_detune[chan])); //(int)adjust); //range/((127/64-value)));
         SID.updateVoiceFrequency(chan);
-      }
+      }*/
 
       break;
   
      case MIDI_CC_OCTAVE:
       voice_octave[chan] = (value/2)-48;
-      if (curNote[chan]!=0) {
+      /*if (curNote[chan]!=0) {
         SID.setFrequency(chan, sidinote[voice_octave[chan] + curNote[chan]] + voice_detune[chan]);
         SID.updateVoiceFrequency(chan);
-      }
+      }*/
       break;
 
       case MIDI_CC_TRI:
@@ -144,6 +157,9 @@ void decodeCC( int chan, byte controller, byte value ) {
       break;
       case MIDI_CC_NOI:
         SID.setShape2 (chan, SID6581_MASK_NOISE, value==127);
+      break;
+      case MIDI_CC_TST:
+        SID.setShape2 (chan, SID6581_MASK_TEST, value==127);
       break;
 
       case MIDI_CC_FILTMODE_LP:

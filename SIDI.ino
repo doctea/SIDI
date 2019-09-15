@@ -49,6 +49,16 @@
 /** Current note for all 3 channels */
 unsigned long curNote[3] = { 0, 0, 0 };
 
+unsigned long lastNote[3] = { 0, 0, 0 };
+
+unsigned long voice_porta[3] = {
+  120, 120, 60
+};
+
+unsigned long voice_portamicros[3] = {
+  0, 0, 0
+};
+
 int voice_octave[3] = {
   0,0,0
 };
@@ -69,12 +79,19 @@ void setup() {
     
   for( int x=0;x<3;x++ ) {
     //SID.setEnvelope( x, 0, 0, 15, 0 );
-    SID.setEnvelope( x, 5, 1, 15, 5 );
+    SID.setEnvelope( x, 1, 1, 15, 5 );
     SID.updateEnvelope(x);
     
     SID.setShape( x, SID6581_MASK_SQUARE );
     SID.setPulseWidth( x, 2048 );
   }
+
+  //SID.setFilter(SID6581_MASK_FLT_EXT,false);  // 
+
+  SID.setFilterMode(1);
+
+  SID.resetFilter();
+  
 
   test_voice();
 }
@@ -103,12 +120,12 @@ int forceRead() {
 
 void test_voice() {
  int evt;
-  while( Serial.available() > 0 ) {
+  /*while( Serial.available() > 0 ) {
         evt = forceRead();
-  }
+  }*/
 
 
-  SID.resetFilter(); //resetChip();
+  //SID.resetFilter(); //resetChip();
   
   /*sidchip.filter.resfilt = B11111111; // set high bits
   
@@ -117,30 +134,29 @@ void test_voice() {
   setData( sidchip.filter.resfilt);
   writeData();*/
 
-            SID.setVolume(15);
-              SID.setFrequency( 0, sidinote[35] );
-              SID.updateVoiceFrequency( 0 );
+  for (int i = 0 ; i< 3 ; i++) {
+              SID.setVolume(4);
+              SID.setFrequency( i, sidinote[35] );
+              SID.updateVoiceFrequency( i );
               
               //if( curNote[chan] == 0 )
-                SID.voiceOn(0);
-                delay(100);
-                SID.voiceOff(0);
-                delay(100);
-
+                SID.voiceOn(i);
+                delay(200);
+                SID.voiceOff(i);
+                //delay(200);
 
             SID.setVolume(15);
-              SID.setFrequency( 0, sidinote[60] );
-              SID.updateVoiceFrequency( 0 );
+              SID.setFrequency( i, sidinote[60] );
+              SID.updateVoiceFrequency( i );
 
               delay(500);
 
-              SID.voiceOff(0);
+              SID.voiceOff(i);
 
               delay(500);
+  }
 
-              SID.setFilterOn(SID6581_MASK_FLT_EXT , true);
-
-              
+              //SID.setFilterOn(SID6581_MASK_FLT_EXT , true);
                 
 }
 
@@ -155,11 +171,110 @@ void test_voice() {
 #define MIDI_VEND_ARDSID 0x7D
 #define MIDI_SYSEX_END 0xF7 
 
+float getPortaAdjust(int chan, int note) {
+  if (note==lastNote[chan]) 
+    return 0;
+    
+  long freqdiff = 
+    (long)(sidinote[voice_octave[chan] + lastNote[chan]]+voice_detune[chan]) -
+    (long)(sidinote[voice_octave[chan] + note]+voice_detune[chan])  
+    ;
+
+    freqdiff = abs(freqdiff);
+    
+  //return freqdiff * (voice_porta[chan]/127) * (micros()-voice_portamicros[chan]);
+  //return random(freqdiff);
+  //return (freqdiff * ((micros()-voice_portamicros[chan]))) /freqdiff;
+  //sysex(5,(int)freqdiff/10);
+  if (voice_portamicros[chan]==0) 
+    return 0;
+
+  float porta_factor = (1000/127);
+    
+  long elapsed = ((micros()-voice_portamicros[chan])/1000);
+  if (elapsed < (voice_porta[chan]*porta_factor) ) {
+    //elapsed = (voice_porta[chan]*5)-elapsed;
+    float a = ((float)elapsed/(float)(voice_porta[chan]*porta_factor)); // * freqdiff;// * (((micros()-voice_portamicros[chan])) / voice_porta[chan]); // (freqdiff/120);
+    //if (a<=(-1*freqdiff)) a = -1;
+    //if (a>=freqdiff) a = 1;
+    //a = constrain(a,-1.0,1.0);
+    //return (/*-1.0**/freqdiff) * ((float)elapsed/(float)(voice_porta[chan]*porta_factor));
+    //if (note < lastNote[chan]) return freqdiff*-1;
+    return freqdiff * a;///12;
+    /*unsigned long elapsed = (micros()-voice_portamicros[chan]);
+    //if (elapsed > voice_porta[chan]) {
+      float a = (voice_porta[chan]/elapsed)*1000; //voice_porta[chan]*(voice_porta[chan]/elapsed);///voice_porta[chan];
+      return freqdiff/a;
+    //}
+    //float a = freqdiff/;
+    //return a;*/
+  }
+  return 0;
+}
+
+uint16_t getVoiceFrequency(int chan, int note) {
+   int16_t f = (sidinote[voice_octave[chan] + note] + voice_detune[chan]);
+
+   int16_t pa = getPortaAdjust(chan, note);
+   if (pa>=0) {
+    if (note < lastNote[chan]) {
+      return f - (pa>>4);
+    } else if (note > lastNote[chan]) {
+      return f + (pa>>4);
+    }
+   }
+   return f;
+   /*if (pa>0) 
+    return f + pa;
+   else if (pa<0) {
+    return f - pa;
+   } else {
+    return f;
+   } */    
+}
+
+
+void updatePorta() {
+  for (int chan = 0 ; chan < 3 ; chan++) {
+    //int porta_amount = (micros() - voice_portamicros[chan]) / (voice_porta[chan]*8);
+    if (/*porta_amount!=0 && */curNote[chan]!=0) {
+      SID.setFrequency(chan, getVoiceFrequency(chan,curNote[chan]));
+      SID.updateVoiceFrequency( chan );
+    }
+  }
+}
+
+void playNote(int chan, int note) {
+
+  lastNote[chan] = curNote[chan];
+  
+  SID.setFrequency( 
+    chan, getVoiceFrequency(chan, note)
+  );
+  SID.updateVoiceFrequency( chan );
+  
+  if( curNote[chan] == 0 ) {
+    SID.voiceOn(chan);
+    voice_portamicros[chan] = 0;
+  } /*else {
+    SID.voiceOff(chan);
+    //SID.voiceOn(chan);
+  }*/ else {
+    voice_portamicros[chan] = micros();
+  }
+
+  //lastNote[chan] = curNote[chan];
+  curNote[chan] = note;
+}
+
+
 void loop() {
   int evt, chan, note, vel, foo;
 
   //void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom);
   LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
+
+  updatePorta();
   
   while( Serial.available() > 0 ) {
     evt = forceRead();
@@ -201,23 +316,12 @@ void loop() {
                   }
                 }
                 if( !already_playing) { //curNote[chan] != note ) { // not already playing note 
-                  SID.setFrequency( 
-                    chan, sidinote[voice_octave[chan] + note] + 
-                    (voice_detune[chan])
-                  );
-                  SID.updateVoiceFrequency( chan );
+                  playNote(chan, note);
+
                   //SID.setVolume(vel>>4);
 
                   LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
                   
-                  if( curNote[chan] == 0 ) {
-                    SID.voiceOn(chan);
-                  } else {
-                    SID.voiceOff(chan);
-                    SID.voiceOn(chan);
-                  }
-                    
-                  curNote[chan] = note;
                   instance++;
                 }
               }              
@@ -231,17 +335,9 @@ void loop() {
                 }
               } else {
                 if( curNote[chan] != note ) {
+                  playNote(chan, note);
 
-                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
-                  SID.updateVoiceFrequency( chan );
-                  //SID.setVolume(vel>>4);
-                  
                   LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
-
-                  if( curNote[chan] == 0 )
-                    SID.voiceOn(chan);
-                    
-                  curNote[chan] = note;
                 }
               }
             }
@@ -262,16 +358,10 @@ void loop() {
             } else {
               if( curNote[0] != note ) {
                 LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
+                //curNote[chan] = note;
 
                 for (chan = 0 ; chan < 3 ; chan++) {
-                  SID.setFrequency( chan, sidinote[voice_octave[chan] + note] + (voice_detune[chan]));
-                  SID.updateVoiceFrequency( chan );
-                  //SID.setVolume(vel>>4);
-                
-                  if( curNote[chan] == 0 )
-                    SID.voiceOn(chan);
-                  
-                  curNote[chan] = note;
+                  playNote(chan, note);
                 }
               }
             }
