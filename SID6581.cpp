@@ -90,10 +90,10 @@ void SID6581::startClock(void) {
   TCCR1A = 0;
   TCCR1B = 0;
   TCNT1 = 0;
-  OCR1A = 7;
-  TCCR1A |= (1 << COM1A0);
-  TCCR1B |= (1 << WGM12);
-  TCCR1B |= (1 << CS10);
+  OCR1A = 7;   // toggle after counting to 8
+  TCCR1A |= (1 << COM1A0);   // Toggle OC1A on Compare Match.
+  TCCR1B |= (1 << WGM12);    // CTC mode
+  TCCR1B |= (1 << CS10);     // clock on, no pre-scaler
   
   delayMicroseconds(1);
   resetChip();

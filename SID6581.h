@@ -134,6 +134,7 @@
 #endif
 
 // see the note in circuit.txt -- had to swap these two lines in hardware to get chip to work, regardless of how these pins are configured?
+// ok so -- seems like this MUST be pin 9 specifically, in order to use it as a clock-divided output?
 #ifndef SID6581_PIN_CLOCK
 #define SID6581_PIN_CLOCK 9
 //9

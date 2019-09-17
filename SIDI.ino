@@ -90,7 +90,7 @@ void setup() {
     SID.setPulseWidth( x, 2048 );
   }
 
-  //SID.setFilter(SID6581_MASK_FLT_EXT,false);  // 
+  SID.setFilter(SID6581_MASK_FLT_EXT,true);  // 
 
   SID.setFilterMode(1);
 
@@ -332,6 +332,8 @@ void loop() {
                 // pick a new channel to play this note on 
                 //chan = instance%3;
                 bool already_playing = false;
+                // default to re-using the third voice if no other voice available
+                chan = 2;
                 for (int i = 0 ; i < 3 ; i++) {
                   if (curNote[i] == note) {
                     already_playing = true;
