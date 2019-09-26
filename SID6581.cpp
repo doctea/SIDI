@@ -437,8 +437,27 @@ void SID6581::setCutoff( uint8_t vol ) {
   //sidchip.filter.cutoff &= B11110000;
   //sidchip.filter. |= (vol & B00001111);
 
-  sidchip.filter.frequency = vol * 16;
-  /*
+#define log_cutoff TRUE
+  
+#ifdef log_cutoff
+   float knob = ((float)vol * DIV127);
+   int bottom = 0; int top = 4095;
+ 
+   //We want 20Hz to 20000Hz. Knob values 0 to 1. Then
+   //freq = exp(ln(20) + knob * (ln(20000) - ln(20)))
+   int freq = exp(knob * (log(top)));
+   //int freq = exp(log(bottom) + knob * (log(top) - log(bottom)));
+#endif
+ 
+#ifndef log_cutoff
+  int freq = vol * 32;
+  //int freq = (vol << 4) | B00001111;  // set low bits to always on ?
+#endif
+
+  sidchip.filter.frequency = freq;
+  //sidchip.filter.frequency = (freq << 1) | B00000001; //(vol * 32) ;
+  //sidchip.filter.frequency = (vol<<4) | B00001111;
+/*
   // Update immediately
   setAddress( SID6581_REG_FCLO );
   setData( (sidchip.filter.frequency ) ); // & B00001111);
@@ -451,21 +470,30 @@ void SID6581::setCutoff( uint8_t vol ) {
 
 void SID6581::modulateCutoff( float mod ) {
   static float last_mod;
-  static int last_freq;
+  static uint16_t last_freq;
 
   if (last_mod!=mod || last_freq !=sidchip.filter.frequency) {
     last_mod = mod;
     last_freq = sidchip.filter.frequency;
     //mod = 1;
-    mod = mod; //mod >> 4;
+    //mod = mod; //mod >> 4;
     //mod = 0.5-mod; // gives an interseting effect like a mod envelope when combined with hacked mode 3 ie without 0 bias applied
+
+    //uint16_t f = B11111111 | (B00001111<<8); // max range
+    int32_t f = (uint32_t)(((float)sidchip.filter.frequency) * mod); // * mod );
+    if (f>4095) f = 4095;
+    if (f<0) f = 0;
+
+    //f = 4095 - f;
+    
     // Update immediately
     setAddress( SID6581_REG_FCLO );
-    setData( (int)((int)sidchip.filter.frequency * mod ) ); // & B00001111);
+    //setData( (int)((int)sidchip.filter.frequency * mod ) ); // & B00001111);
+    setData ( f >> 8 );
     writeData();
   
     setAddress( SID6581_REG_FCHI );
-    setData( (int)((int)sidchip.filter.frequency * mod)>>4 ); // & B11111111);  //setData( (width >> 8) & B00001111 );
+    setData ( f >> 4 );
     writeData();  
   }
 }

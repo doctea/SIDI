@@ -3,7 +3,6 @@
 // By Notes and Volts
 // www.notesandvolts.com
 
-const float DIV127 = (1.0 / 127.0);
 
 unsigned int LFOspeed = 2000;
 float LFOpitch = 1;
