@@ -222,8 +222,7 @@ void decodeCC( int chan, byte controller, byte value ) {
       case MIDI_CC_POLY:
         poly = value==127;
         for (chan = 0 ; chan < 3 ; chan++) {
-            SID.voiceOff(chan);
-            curNote[chan] = 0;
+            stopNote(chan);
         }
         
         break;
@@ -243,7 +242,7 @@ void decodeCC( int chan, byte controller, byte value ) {
       case 123: // midi stop all notes
         for( chan=0;chan<3;chan++ ) {
           SID.voiceOff(chan);
-          curNote[chan] = 0;
+          SID.curNote[chan] = 0;
         }
         break;
 

@@ -1,5 +1,7 @@
 // Offcuts from SIDI to start cleaning it up, non-working Arpeggiator
 
+// dont try and compile this file
+#ifdef ENABLE_OFFCUTS
 
 /** Arpeggio data struture. Currently broken. */
 byte arpeg[3][7] = {
@@ -53,7 +55,7 @@ void update_arpeggios() {
       
       if( arpeg[chan][1] != 6 ) {
         note = arpeg[chan][arpeg[chan][1]];
-        if( curNote[chan] != note ) {
+        if( SID.curNote[chan] != note ) {
           SID.setFrequency( chan, sidinote[note] );
           SID.updateVoiceFrequency( chan );
           curNote[chan] = note;
@@ -290,3 +292,7 @@ void update_arpeggios() {
           oscSet();
         }
         break;*/
+
+
+
+#endif

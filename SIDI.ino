@@ -1,3 +1,16 @@
+#include <dmtimer.h>
+
+
+DMTimer myTimer(1000000 / 25); //Create a timer and specify its interval in microseconds - higher number means less frequent updates
+  // less frequent updates == less noise, but less smooth modulation
+  // 1000000 / 100 reasonably ok tradeoff
+  // 1000000 / 50 also ok
+  // 1000000 / 25 too
+  // 1000000 / 20 too jagged updates
+  // 1000000 / 15 not OK
+  // 1000000 / 10 not OK - updates not fast enough
+//DMTimer myTimer(25000); //Create a timer and specify its interval in microseconds
+
 /********************************************************
  *          ______                                      *
  *    _____|\     \       ____                 _____    * 
@@ -46,8 +59,6 @@
 #include "SIDINotes.h"
 #include "SID6581.h"
 
-/** Current note for all 3 channels */
-unsigned long curNote[3] = { 0, 0, 0 };
 
 unsigned long lastNote[3] = { 0, 0, 0 };
 
@@ -73,6 +84,12 @@ int modwheel_pw_value = 0;
 
 bool poly = false;
 
+
+void lfo() {
+  LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
+}
+
+
 /**
  * Set up the serial port and start the SID chip's
  * clock running. This will also reset the chip.
@@ -95,7 +112,6 @@ void setup() {
   SID.setFilterMode(1);
 
   SID.resetFilter();
-  
 
   test_voice();
 }
@@ -262,8 +278,8 @@ uint16_t getVoiceFrequency(int chan, int note) {
 void updatePorta() {
   for (int chan = 0 ; chan < 3 ; chan++) {
     //int porta_amount = (micros() - voice_portamicros[chan]) / (voice_porta[chan]*8);
-    if (/*porta_amount!=0 && */curNote[chan]!=0) {
-      SID.setFrequency(chan, getVoiceFrequency(chan,curNote[chan]));
+    if (/*porta_amount!=0 && */SID.curNote[chan]!=0) {
+      SID.setFrequency(chan, getVoiceFrequency(chan,SID.curNote[chan]));
       SID.updateVoiceFrequency( chan );
     }
   }
@@ -271,14 +287,14 @@ void updatePorta() {
 
 void playNote(int chan, int note) {
 
-  lastNote[chan] = curNote[chan];
+  lastNote[chan] = SID.curNote[chan];
   
   SID.setFrequency( 
     chan, getVoiceFrequency(chan, note)
   );
   SID.updateVoiceFrequency( chan );
   
-  if( curNote[chan] == 0 ) {
+  if( SID.curNote[chan] == 0 ) {
     SID.voiceOn(chan);
     voice_portamicros[chan] = 0;
   } /*else {
@@ -289,7 +305,12 @@ void playNote(int chan, int note) {
   }
 
   //lastNote[chan] = curNote[chan];
-  curNote[chan] = note;
+  SID.curNote[chan] = note;
+}
+
+void stopNote(int chan) {
+  SID.voiceOff(chan);
+  SID.curNote[chan] = 0;
 }
 
 
@@ -297,9 +318,10 @@ void loop() {
   int evt, chan, note, vel, foo;
 
   //void LFOupdate(bool retrig, byte mode, float FILtop, float FILbottom);
-  LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
-
-  updatePorta();
+  if(myTimer.isTimeReached()){ //check if execution time has been reached
+    LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
+    updatePorta();
+  }
   
   while( Serial.available() > 0 ) {
     evt = forceRead();
@@ -321,9 +343,10 @@ void loop() {
               if( evt == MIDI_NOTE_OFF || vel == 0 ) {
                 // turn off any channels that are playing this note
                 for (int i = 0 ; i < 3 ; i++) {
-                  if( curNote[i] == note ) {
-                    SID.voiceOff(i);
-                    curNote[i] = 0;
+                  if( SID.curNote[i] == note ) {
+                    stopNote(i);
+                    //SID.voiceOff(i);
+                    //SID.curNote[i] = 0;
                     instance--;
                     //break;
                   }
@@ -335,9 +358,9 @@ void loop() {
                 // default to re-using the third voice if no other voice available
                 chan = 2;
                 for (int i = 0 ; i < 3 ; i++) {
-                  if (curNote[i] == note) {
+                  if (SID.curNote[i] == note) {
                     already_playing = true;
-                  } else if (curNote[i] == 0) {
+                  } else if (SID.curNote[i] == 0) {
                     chan = i;
                     break;
                   }
@@ -356,12 +379,11 @@ void loop() {
               // poly mode - play voices individually by channel
               chan %= 3;
               if( evt == MIDI_NOTE_OFF || vel == 0 ) {
-                if( curNote[chan] == note ) {
-                  SID.voiceOff(chan);
-                  curNote[chan] = 0;
+                if( SID.curNote[chan] == note ) {
+                  stopNote(chan);
                 }
               } else {
-                if( curNote[chan] != note ) {
+                if( SID.curNote[chan] != note ) {
                   playNote(chan, note);
 
                   LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
@@ -373,17 +395,12 @@ void loop() {
             // mono mode - play all voices simultaneously
             if( evt == MIDI_NOTE_OFF || vel == 0 ) {  // note off - stop all voices
               for (chan = 0 ; chan < 3 ; chan++) {
-                if( curNote[chan] == note ) {
-                  SID.voiceOff(chan);
-                  //SID.voiceOff(1);
-                  //SID.voiceOff(2);
-                  curNote[chan] = 0;
-                  //curNote[1] = 0;
-                  //curNote[2] = 0;
+                if( SID.curNote[chan] == note ) {
+                  stopNote(chan);
                 }
               }
             } else {
-              if( curNote[0] != note ) {
+              if( SID.curNote[0] != note ) {
                 LFOupdate(true, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); //, LFOdepth);
                 //curNote[chan] = note;
 

@@ -122,28 +122,30 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
 #define bias 1
     //float bias = 1;
 
-    
+
+    #define fudge_1 100.0
+    #define fudge_2 1000.0
 
     // between 0 and 1, how much of the attack period has elapsed?
     // time since retrigMicros s=d/t t=d/s d=t*s
-    float t = ((currentMicros-retrigMicros)/(LFOspeed*1000)) ;
+    float t = ((currentMicros-retrigMicros)/(LFOspeed*fudge_2)) ;
     float atkfactor = t * LFOattack;
     if (atkfactor>1) atkfactor = 1;
     if (atkfactor<0) atkfactor = 0;
 
-    float mw = (float)(127-modwheel_value)/127;
-    float mw_pw = 1.0-((1.0-mw) * ((float)modwheel_pw_value)/127);
-    float mw_filt = 1.0-((1.0-mw) * ((float)modwheel_filt_value)/127);
+    float mw = (float)(127-modwheel_value)*DIV127;
+    float mw_pw = 1.0-((1.0-mw) * ((float)modwheel_pw_value)*DIV127);
+    float mw_filt = 1.0-((1.0-mw) * ((float)modwheel_filt_value)*DIV127);
     
-        // update pulse widths by lfo too..?
+    // update pulse widths by lfo too..?
     for (int i = 0 ; i < 3 ; i++) {
       //float pulfactor = t * SID.voice_pulfactor[i];// LFO; //constrain(((currentMicros%LFOspeed)/(LFOspeed*1000)),0,1); // * SID.voice_pulfactor[i]);
       float pulfactor = (LFO * SID.voice_pulfactor[i]) * (atkfactor || 1);
 
       //SID.setPulseWidth(i, ((int)(((currentMicros-retrigMicros)/(LFOspeed*1000))*SID.voice_pulfactor[i] + SID.sidchip.voices[i].width)<<4));
       //SID.setPulseWidth(i,(SID.sidchip.voices[i].width + (int)(LFO*pulfactor*100*SID.voice_pulfactor[i]))); //(LFOtime * SID.voice_pulfactor[i]))<<4);
-      SID.setPulseWidth(i,
-        SID.sidchip.voices[i].width + 
+      SID.modulatePulseWidth(i,
+        //SID.sidchip.voices[i].width + 
         (pulfactor*(mw_pw*100.0))//(float)modwheel_pw_value) //100) //SID.sidchip.voices[i].width))
       ); //+ (uint8_t)(200*(atkfactor*pulfactor))))<<4); //(int)(SID.voice_pulfactor[i]*pulfactor)) << 4); // (1+(pulfactor * 127*SID.voice_pulfactor[i]))); //+ (100 * pulfactor * SID.voice_pulfactor[i]));
     }
@@ -195,7 +197,11 @@ void LFOupdate(bool retrig, byte mode, float FILtop){ //, float FILbottom) {
           LFOdirection = false;
           LFO = 0;
         }
-        if (LFOstop == false) SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
+        if (LFOstop == false) {
+          SID.modulateCutoff(atkfactor * bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
+        } else
+          SID.modulateCutoff(0);//atkfactor * bias+((LFOrange * LFO * (mw_filt)) + LFOdepth));
+
         break;
     }
 

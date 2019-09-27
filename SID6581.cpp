@@ -260,11 +260,27 @@ void SID6581::updateVoiceFrequency( int which ) {
   writeData();
 }
 
+void SID6581::modulatePulseWidth( int voice, float mod) {
+  static float last_mod;
+  static uint16_t last_width[3] = { 0, 0, 0 };
+
+  if (curNote[voice]==0)
+    return; // early return if no note being played on this voice
+
+  if (!CHECK_BIT(SID.sidchip.voices[voice].control, SID6581_MASK_SQUARE))
+    return; // early return if SQUARE waveform isn't being used for this voice, improves speed, reduces noise
+
+  if (last_mod!=mod || SID.sidchip.voices[voice].width!=last_width[voice]) {
+    last_mod = mod;
+    last_width[voice] = SID.sidchip.voices[voice].width;
+    setPulseWidth(voice, SID.sidchip.voices[voice].width + mod);
+  }
+}
+
 void SID6581::setPulseWidth( int voice, uint16_t width ) {
   static uint16_t last_width[3] = { 0,0,0 };
   uint8_t hi, lo;
   //sidchip.voices[voice].width = width;
-
   //width += ((int)((4096*voice_pulfactor[voice])-2048));
   
   if (last_width[voice]!=width) {
@@ -289,7 +305,7 @@ void SID6581::setPulseWidth( int voice, uint16_t width ) {
       default:
         return;
     }
-    
+
     setAddress( lo );
     setData( width );
     writeData();
@@ -468,7 +484,14 @@ void SID6581::setCutoff( uint8_t vol ) {
   writeData();*/
 }
 
+#define LFO_NO_EARLY_RETURN
+#define LFO_ENABLE_WRITES
+
 void SID6581::modulateCutoff( float mod ) {
+  #ifndef LFO_NO_EARLY_RETURN
+  return;
+  #endif
+  
   static float last_mod;
   static uint16_t last_freq;
 
@@ -485,7 +508,8 @@ void SID6581::modulateCutoff( float mod ) {
     if (f<0) f = 0;
 
     //f = 4095 - f;
-    
+
+    #ifdef LFO_ENABLE_WRITES
     // Update immediately
     setAddress( SID6581_REG_FCLO );
     //setData( (int)((int)sidchip.filter.frequency * mod ) ); // & B00001111);
@@ -495,6 +519,7 @@ void SID6581::modulateCutoff( float mod ) {
     setAddress( SID6581_REG_FCHI );
     setData ( f >> 4 );
     writeData();  
+    #endif
   }
 }
 

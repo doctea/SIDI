@@ -292,6 +292,9 @@ class SID6581 {
     sid6581_chip_t sidchip;
 
     float voice_pulfactor[3];
+
+    /** Current note for all 3 channels */
+    unsigned long curNote[3] = { 0, 0, 0 };
     
     SID6581();
     
@@ -312,6 +315,7 @@ class SID6581 {
     void voiceOn( int which );
     void voiceOff( int which );
     void setPulseWidth( int voice, uint16_t width );
+    void modulatePulseWidth( int voice, float mod );
     void setSync(int which, int state);
     void setRing(int which, int state);
     
