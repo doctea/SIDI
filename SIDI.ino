@@ -95,7 +95,8 @@ void lfo() {
  * clock running. This will also reset the chip.
  */
 void setup() {
-  Serial.begin(38400);
+  //Serial.begin(38400);  // use hairless-midiserial bridge https://projectgus.github.io/hairless-midiserial/
+  Serial.begin(31250);    // direct MIDI/USB MIDI using https://github.com/TheKikGen/USBMidiKliK
   SID.startClock();
     
   for( int x=0;x<3;x++ ) {
@@ -366,7 +367,6 @@ void loop() {
                   }
                 }
                 if( !already_playing) { //curNote[chan] != note ) { // not already playing note 
-                  playNote(chan, note);
 
                   //SID.setVolume(vel>>4);
 
