@@ -56,7 +56,13 @@ DMTimer myTimer(1000000 / 25); //Create a timer and specify its interval in micr
 
 #include <Arduino.h>
 
+#define MICROTONES
+
+#ifndef MICROTONES
 #include "SIDINotes.h"
+#else
+#include "SIDImicrotonalnotes.h"
+#endif
 #include "SID6581.h"
 
 
