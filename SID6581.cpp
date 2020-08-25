@@ -46,9 +46,6 @@
 #include <Arduino.h>
 #include "SID6581.h"
 
-
-
-
 SID6581::SID6581() {
   int x;
   
@@ -446,6 +443,14 @@ void SID6581::setVolume( uint8_t vol ) {
   setAddress( SID6581_REG_MVOL );
   setData( sidchip.filter.modevol );
   writeData();
+}
+
+void SID6581::setTuningScheme (int chan, int value) {
+  if (value>0) {
+    SID.tuning_scheme[chan] = 1; //TUNING_MICROTONAL;  // ugh can't figure out how to get this to appear 'in scope'
+  } else {
+    SID.tuning_scheme[chan] = 0; //TUNING_STANDARD;    // ugh can't figure out how to get this to appear 'in scope'
+  }
 }
 
 

@@ -56,7 +56,7 @@ void update_arpeggios() {
       if( arpeg[chan][1] != 6 ) {
         note = arpeg[chan][arpeg[chan][1]];
         if( SID.curNote[chan] != note ) {
-          SID.setFrequency( chan, sidinote[note] );
+          SID.setFrequency( chan, sidinote[SID.tuning_scheme[chan]][note] );
           SID.updateVoiceFrequency( chan );
           curNote[chan] = note;
         }

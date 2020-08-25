@@ -55,8 +55,12 @@
 
 #include <Arduino.h>
 
-#define CHECK_BIT(var,pos) ((var) & (pos))
 
+#define TUNING_STANDARD   0
+#define TUNING_MICROTONAL 1
+
+
+#define CHECK_BIT(var,pos) ((var) & (pos))
 
 const float DIV127 = (1.0 / 127.0);
 
@@ -295,6 +299,13 @@ class SID6581 {
 
     /** Current note for all 3 channels */
     unsigned long curNote[3] = { 0, 0, 0 };
+
+    /** Current tuning for all 3 channels - default to standard tuning */
+    byte tuning_scheme[3] = {
+      TUNING_STANDARD,
+      TUNING_STANDARD,
+      TUNING_STANDARD,
+    };
     
     SID6581();
     
@@ -318,6 +329,8 @@ class SID6581 {
     void modulatePulseWidth( int voice, float mod );
     void setSync(int which, int state);
     void setRing(int which, int state);
+
+    void setTuningScheme(int voice, int value);
     
     void setVolume( uint8_t vol );
     void setCutoff ( uint8_t vol);

@@ -56,15 +56,12 @@ DMTimer myTimer(1000000 / 25); //Create a timer and specify its interval in micr
 
 #include <Arduino.h>
 
-#define MICROTONES
 
-#ifndef MICROTONES
+#define TUNING_STANDARD   0
+#define TUNING_MICROTONAL 1
+
 #include "SIDINotes.h"
-#else
-#include "SIDImicrotonalnotes.h"
-#endif
 #include "SID6581.h"
-
 
 unsigned long lastNote[3] = { 0, 0, 0 };
 
@@ -90,6 +87,7 @@ int modwheel_pw_value = 0;
 
 bool poly = false;
 
+byte tuning_scheme = TUNING_STANDARD;
 
 void lfo() {
   LFOupdate(false, 0/*LFOmodeSelect*/, SID.sidchip.filter.frequency); // LFOdepth);
@@ -163,7 +161,7 @@ void test_voice() {
 
   for (int i = 0 ; i< 3 ; i++) {
               SID.setVolume(4);
-              SID.setFrequency( i, sidinote[35] );
+              SID.setFrequency( i, sidinote[SID.tuning_scheme[i]][35] );
               SID.updateVoiceFrequency( i );
               
               //if( curNote[chan] == 0 )
@@ -173,7 +171,7 @@ void test_voice() {
                 //delay(200);
 
               SID.setVolume(15);
-              SID.setFrequency( i, sidinote[60] );
+              SID.setFrequency( i, sidinote[SID.tuning_scheme[i]][60] );
               SID.updateVoiceFrequency( i );
 
               delay(250);
@@ -218,8 +216,8 @@ float getPortaAdjust(int chan, int note) {
     return 0;
     
   long freqdiff = 
-    (long)(sidinote[voice_octave[chan] + lastNote[chan]]+voice_detune[chan]) -
-    (long)(sidinote[voice_octave[chan] + note]+voice_detune[chan])  
+    (long)(sidinote[SID.tuning_scheme[chan]][voice_octave[chan] + lastNote[chan]]+voice_detune[chan]) -
+    (long)(sidinote[SID.tuning_scheme[chan]][voice_octave[chan] + note]+voice_detune[chan])  
     ;
 
     freqdiff = abs(freqdiff);
@@ -261,7 +259,7 @@ float getPortaAdjust(int chan, int note) {
 }
 
 uint16_t getVoiceFrequency(int chan, int note) {
-   int16_t f = (sidinote[voice_octave[chan] + note] + voice_detune[chan]);
+   int16_t f = (sidinote[SID.tuning_scheme[chan]][voice_octave[chan] + note] + voice_detune[chan]);
 
    int16_t pa = getPortaAdjust(chan, note);
    if (pa>=0) {
@@ -341,7 +339,7 @@ void loop() {
       case MIDI_NOTE_ON: //0x90:
         note = forceRead();
         vel = forceRead();
-        if( /*chan < 3 &&*/ sidinote[note] != 0 ) {
+        if( /*chan < 3 &&*/ sidinote[SID.tuning_scheme[chan]][note] != 0 ) {
           if (poly) { 
             if (chan==0) { 
               // new roundrobin polyopt mode 

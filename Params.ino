@@ -25,6 +25,7 @@
 #define MIDI_CC_NOI MCB+14
 #define MIDI_CC_TST MCB+15
 // todo: add one here for the test bit too?
+#define MIDI_CC_TUNING MCB+16
 
 //36
 #define MIDI_CC_POLY    MCB+PPV+0 /*+PPV+PPV+0*/
@@ -42,6 +43,7 @@
 
 #define MIDI_CC_MW_FILT MCB+PPV+9
 #define MIDI_CC_MW_PW   MCB+PPV+10
+//#define MIDI_CC_TUNING  MCB+PPV+11 /* for selecting standard/microtonal tuning */
 
 // 36+16 = 52
 #define MCL MCB+PPV+16
@@ -238,7 +240,10 @@ void decodeCC( int chan, byte controller, byte value ) {
       /*case MIDI_CC_EMU:
         SID.setEmulation(value==127);
         break;*/
-
+      case MIDI_CC_TUNING:
+        SID.setTuningScheme(chan, value);
+        break;
+        
       case 123: // midi stop all notes
         for( chan=0;chan<3;chan++ ) {
           SID.voiceOff(chan);
