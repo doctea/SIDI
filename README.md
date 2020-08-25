@@ -1,3 +1,5 @@
+Forked from https://github.com/therealjaypo/SIDI, modified to be a standalone SID-based synth.
+
 # SIDI
 An Arduino-powered MIDI interface for the Commodore 6581 SID chip and compatibles.  So far I have only used it with the ARMSID, but if you can build the circuit to support a real SID then I don't see why this shouldn't work.
 
